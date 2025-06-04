@@ -40,22 +40,28 @@ class DragNavigator {
     if (_dock != null) return;
     final nav = ctx.findAncestorStateOfType<HomeNavState>()!;
     _dock = OverlayEntry(
-      builder: (_) => Positioned(
-        bottom: 16,
-        left: 0,
-        right: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(4, (i) => DragTarget(
-            onAccept: (_) => nav.jumpToPage(i),
-            builder: (ctx, cand, rej) => Icon(
-              _icons[i],
-              size: 36,
-              color: cand.isEmpty ? Colors.white54 : Colors.yellowAccent,
+      builder:
+          (_) => Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(
+                4,
+                (i) => DragTarget(
+                  onAcceptWithDetails: (_) => nav.jumpToPage(i),
+                  builder:
+                      (ctx, cand, rej) => Icon(
+                        _icons[i],
+                        size: 36,
+                        color:
+                            cand.isEmpty ? Colors.white54 : Colors.yellowAccent,
+                      ),
+                ),
+              ),
             ),
-          )),
-        ),
-      ),
+          ),
     );
     Overlay.of(ctx, rootOverlay: true).insert(_dock!);
   }

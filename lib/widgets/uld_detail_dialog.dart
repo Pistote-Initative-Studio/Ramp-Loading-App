@@ -20,7 +20,7 @@ class UldDetailDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Type: ${container.type ?? "Unknown"}',
+            'Type: ${container.type}',
             style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 16),
