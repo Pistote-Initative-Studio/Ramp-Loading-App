@@ -115,6 +115,10 @@ class BallDeckPage extends ConsumerWidget {
             .placeIntoOverflowAt(container, overflowIndex);
       },
       builder: (context, candidateData, rejectedData) {
+        final isPlaceholder =
+            uld == null ||
+            uld.type == 'EMPTY' ||
+            uld.uld.startsWith('EMPTY_SLOT');
         return DottedBorder(
           color: candidateData.isNotEmpty ? Colors.yellow : Colors.white,
           strokeWidth: 2,
@@ -127,7 +131,7 @@ class BallDeckPage extends ConsumerWidget {
             color: Colors.transparent,
             child: Center(
               child:
-                  uld == null
+                  isPlaceholder
                       ? const SizedBox()
                       : LongPressDraggable<model.StorageContainer>(
                         data: uld,
