@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'aircraft.dart';
 
 part 'container.g.dart';
 
@@ -30,27 +31,4 @@ class StorageContainer extends HiveObject {
     this.hasDangerousGoods = false,
     this.colorIndex,
   });
-}
-
-class StorageContainerAdapter extends TypeAdapter<StorageContainer> {
-  @override
-  final int typeId = 0;
-
-  @override
-  StorageContainer read(BinaryReader reader) {
-    return StorageContainer(
-      id: reader.readString(),
-      label: reader.readString(),
-      destination: reader.read(),
-      hasDangerousGoods: reader.readBool(),
-    );
-  }
-
-  @override
-  void write(BinaryWriter writer, StorageContainer obj) {
-    writer.writeString(obj.id);
-    writer.writeString(obj.label);
-    writer.write(obj.destination);
-    writer.writeBool(obj.hasDangerousGoods);
-  }
 }
