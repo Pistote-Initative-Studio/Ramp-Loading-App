@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -6,6 +7,7 @@ import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
 import '../widgets/uld_chip.dart';
+import '../widgets/slot_layout_constants.dart'
 
 class PlanePage extends ConsumerWidget {
   const PlanePage({super.key});
@@ -27,46 +29,92 @@ class PlanePage extends ConsumerWidget {
                   style: TextStyle(color: Colors.white70),
                 ),
               )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left Column (1L to 9L)
-                        Expanded(
-                          child: Column(
-                            children: List.generate(9, (i) {
-                              return _buildSlot(ref, i * 2, '${i + 1}L');
-                            }),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Right Column (1R to 9R)
-                        Expanded(
-                          child: Column(
-                            children: List.generate(9, (i) {
-                              return _buildSlot(ref, i * 2 + 1, '${i + 1}R');
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSlot(ref, 18, 'A10'), // Center slot
-                  ],
+              padding: slotPadding,
+              child: _buildLayout(ref, sequence),
                 ),
               ),
     );
   }
 
+ Widget _buildLayout(WidgetRef ref, LoadingSequence sequence) {
+    final slots = ref.watch(planeProvider).slots;
+    final columns = _columnCount(sequence);
+
+    if (columns == 2) {
+      return Wrap(
+        direction: Axis.vertical,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: slotSpacing,
+        runSpacing: slotRunSpacing,
+        children: List.generate(slots.length,
+            (i) => _buildSlot(ref, i, _slotLabel(i))),
+      );
+    } else if (columns == 1) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(slots.length, (i) {
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: i == slots.length - 1 ? 0 : slotRunSpacing),
+            child: _buildSlot(ref, i, _slotLabel(i)),
+          );
+        }),
+      );
+    }
+
+    // Fallback for future configurations.
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                children: List.generate(9, (i) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: slotRunSpacing),
+                    child: _buildSlot(ref, i * 2, '${i + 1}L'),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                children: List.generate(9, (i) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: slotRunSpacing),
+                    child: _buildSlot(ref, i * 2 + 1, '${i + 1}R'),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildSlot(ref, 18, 'A10'),
+      ],
+    );
+  }
+
+  int _columnCount(LoadingSequence sequence) {
+    final count = sequence.order.length;
+    if (count >= 18) return 2; // e.g. 767-200 config A
+    if (count <= 10) return 1;
+    return 0;
+  }
+
+  String _slotLabel(int index) {
+    if (index == 18) return 'A10';
+    final row = index ~/ 2 + 1;
+    final side = index % 2 == 0 ? 'L' : 'R';
+    return '$row$side';
+  }
+
   Widget _buildSlot(WidgetRef ref, int index, String label) {
     final container = ref.watch(planeProvider).slots[index];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: DragTarget<model.StorageContainer>(
+    return DragTarget<model.StorageContainer>(
         onAccept: (c) {
           ref.read(planeProvider.notifier).placeContainer(index, c);
         },

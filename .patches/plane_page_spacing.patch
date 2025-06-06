@@ -1,0 +1,267 @@
+diff --git a/lib/pages/ball_deck_page.dart b/lib/pages/ball_deck_page.dart
+index e8a8f723915b6b745a234ee86981c28a78fc92f4..52e4fb8baa6473cfa1f964de51aabfdfd9370dd3 100644
+--- a/lib/pages/ball_deck_page.dart
++++ b/lib/pages/ball_deck_page.dart
+@@ -1,69 +1,70 @@
+ // /lib/pages/ball_deck_page.dart
+ 
+ import 'package:flutter/material.dart';
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:dotted_border/dotted_border.dart';
+ import '../models/container.dart' as model;
+ import '../providers/ball_deck_provider.dart';
+ import '../widgets/uld_chip.dart';
+ import '../models/aircraft.dart' as model; // For SizeEnum
++import '../widgets/slot_layout_constants.dart';
+ 
+ class BallDeckPage extends ConsumerWidget {
+   const BallDeckPage({super.key});
+ 
+   @override
+   Widget build(BuildContext context, WidgetRef ref) {
+     final ballDeck = ref.watch(ballDeckProvider);
+ 
+     return Scaffold(
+       appBar: AppBar(title: const Text('Ball Deck')),
+       backgroundColor: Colors.black,
+       body: Padding(
+-        padding: const EdgeInsets.all(16),
++        padding: slotPadding,
+         child: SingleChildScrollView(
+           child: Column(
+             children: List.generate(ballDeck.slots.length, (index) {
+               final slotUld = ballDeck.slots[index];
+               final overflowStartIndex = index * 2;
+ 
+               final overflowUld1 =
+                   overflowStartIndex < ballDeck.overflow.length
+                       ? ballDeck.overflow[overflowStartIndex]
+                       : null;
+               final overflowUld2 =
+                   overflowStartIndex + 1 < ballDeck.overflow.length
+                       ? ballDeck.overflow[overflowStartIndex + 1]
+                       : null;
+ 
+               return Padding(
+                 padding: const EdgeInsets.only(bottom: 16),
+                 child: Row(
+                   crossAxisAlignment: CrossAxisAlignment.center,
+                   children: [
+                     buildSlot(ref, slotUld, index),
+-                    const SizedBox(width: 12),
++                    const SizedBox(width: slotSpacing),
+                     buildOverflowSlot(ref, overflowUld1, overflowStartIndex),
+                     const SizedBox(width: 8),
+                     buildOverflowSlot(
+                       ref,
+                       overflowUld2,
+                       overflowStartIndex + 1,
+                     ),
+                   ],
+                 ),
+               );
+             }),
+           ),
+         ),
+       ),
+       floatingActionButton: FloatingActionButton(
+         onPressed: () {
+           showDialog(context: context, builder: (_) => const AddUldDialog());
+         },
+         child: const Icon(Icons.add),
+       ),
+     );
+   }
+ 
+   Widget buildSlot(WidgetRef ref, model.StorageContainer? uld, int slotIdx) {
+     return DragTarget<model.StorageContainer>(
+diff --git a/lib/pages/plane_page.dart b/lib/pages/plane_page.dart
+index 37da5b50cefca522e2f479fce41473131ed04f42..16c8bfba05bb98ddffc783a57d53b7c5ce4c0945 100644
+--- a/lib/pages/plane_page.dart
++++ b/lib/pages/plane_page.dart
+@@ -1,94 +1,141 @@
+ import 'package:flutter/material.dart';
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:dotted_border/dotted_border.dart';
+ import '../models/container.dart' as model;
+ import '../models/aircraft.dart';
+ import '../providers/aircraft_provider.dart';
+ import '../providers/plane_provider.dart';
+ import '../widgets/uld_chip.dart';
++import '../widgets/slot_layout_constants.dart';
+ 
+ class PlanePage extends ConsumerWidget {
+   const PlanePage({super.key});
+ 
+   @override
+   Widget build(BuildContext context, WidgetRef ref) {
+     final aircraft = ref.watch(aircraftProvider);
+     final planeState = ref.watch(planeProvider);
+     final sequence = planeState.selectedSequence;
+ 
+     return Scaffold(
+       backgroundColor: Colors.black,
+       appBar: AppBar(title: const Text('Plane'), backgroundColor: Colors.black),
+       body:
+           aircraft == null || sequence == null
+               ? const Center(
+                 child: Text(
+                   'Please select an aircraft and configuration on the Config Page.',
+                   style: TextStyle(color: Colors.white70),
+                 ),
+               )
+               : SingleChildScrollView(
+-                padding: const EdgeInsets.all(16),
+-                child: Column(
+-                  children: [
+-                    Row(
+-                      crossAxisAlignment: CrossAxisAlignment.start,
+-                      children: [
+-                        // Left Column (1L to 9L)
+-                        Expanded(
+-                          child: Column(
+-                            children: List.generate(9, (i) {
+-                              return _buildSlot(ref, i * 2, '${i + 1}L');
+-                            }),
+-                          ),
+-                        ),
+-                        const SizedBox(width: 16),
+-                        // Right Column (1R to 9R)
+-                        Expanded(
+-                          child: Column(
+-                            children: List.generate(9, (i) {
+-                              return _buildSlot(ref, i * 2 + 1, '${i + 1}R');
+-                            }),
+-                          ),
+-                        ),
+-                      ],
+-                    ),
+-                    const SizedBox(height: 20),
+-                    _buildSlot(ref, 18, 'A10'), // Center slot
+-                  ],
+-                ),
++                padding: slotPadding,
++                child: _buildLayout(ref, sequence),
+               ),
+     );
+   }
+ 
++  Widget _buildLayout(WidgetRef ref, LoadingSequence sequence) {
++    final slots = ref.watch(planeProvider).slots;
++    final columns = _columnCount(sequence);
++
++    if (columns == 2) {
++      return Wrap(
++        direction: Axis.vertical,
++        crossAxisAlignment: WrapCrossAlignment.center,
++        spacing: slotSpacing,
++        runSpacing: slotRunSpacing,
++        children: List.generate(slots.length,
++            (i) => _buildSlot(ref, i, _slotLabel(i))),
++      );
++    } else if (columns == 1) {
++      return Column(
++        mainAxisAlignment: MainAxisAlignment.center,
++        children: List.generate(slots.length, (i) {
++          return Padding(
++            padding: EdgeInsets.only(
++                bottom: i == slots.length - 1 ? 0 : slotRunSpacing),
++            child: _buildSlot(ref, i, _slotLabel(i)),
++          );
++        }),
++      );
++    }
++
++    // Fallback for future configurations.
++    return Column(
++      children: [
++        Row(
++          crossAxisAlignment: CrossAxisAlignment.start,
++          children: [
++            Expanded(
++              child: Column(
++                children: List.generate(9, (i) {
++                  return Padding(
++                    padding: EdgeInsets.only(bottom: slotRunSpacing),
++                    child: _buildSlot(ref, i * 2, '${i + 1}L'),
++                  );
++                }),
++              ),
++            ),
++            const SizedBox(width: 16),
++            Expanded(
++              child: Column(
++                children: List.generate(9, (i) {
++                  return Padding(
++                    padding: EdgeInsets.only(bottom: slotRunSpacing),
++                    child: _buildSlot(ref, i * 2 + 1, '${i + 1}R'),
++                  );
++                }),
++              ),
++            ),
++          ],
++        ),
++        const SizedBox(height: 20),
++        _buildSlot(ref, 18, 'A10'),
++      ],
++    );
++  }
++
++  int _columnCount(LoadingSequence sequence) {
++    final count = sequence.order.length;
++    if (count >= 18) return 2; // e.g. 767-200 config A
++    if (count <= 10) return 1;
++    return 0;
++  }
++
++  String _slotLabel(int index) {
++    if (index == 18) return 'A10';
++    final row = index ~/ 2 + 1;
++    final side = index % 2 == 0 ? 'L' : 'R';
++    return '$row$side';
++  }
++
+   Widget _buildSlot(WidgetRef ref, int index, String label) {
+     final container = ref.watch(planeProvider).slots[index];
+ 
+-    return Padding(
+-      padding: const EdgeInsets.symmetric(vertical: 6),
+-      child: DragTarget<model.StorageContainer>(
++    return DragTarget<model.StorageContainer>(
+         onAccept: (c) {
+           ref.read(planeProvider.notifier).placeContainer(index, c);
+         },
+         builder: (context, candidateData, rejectedData) {
+           final isActive = candidateData.isNotEmpty;
+           return DottedBorder(
+             color: isActive ? Colors.yellow : Colors.white,
+             strokeWidth: 2,
+             dashPattern: container == null ? [4, 4] : [1, 0],
+             borderType: BorderType.RRect,
+             radius: const Radius.circular(8),
+             child: Container(
+               width: 100, // Same as Ball Deck
+               height: 100, // Same as Ball Deck
+               alignment: Alignment.center,
+               child:
+                   container == null
+                       ? Text(
+                         label,
+                         style: const TextStyle(color: Colors.white70),
+                       )
+                       : LongPressDraggable<model.StorageContainer>(
+                         data: container,
+                         feedback: Material(
+                           color: Colors.transparent,
+diff --git a//dev/null b/lib/widgets/slot_layout_constants.dart
+index 0000000000000000000000000000000000000000..dd5a6c62841c5ea332a26c655989c2b5d925a2ab 100644
+--- /dev/null
++++ b/lib/widgets/slot_layout_constants.dart
+@@ -0,0 +1,6 @@
++import 'package:flutter/material.dart';
++
++/// Shared layout constants for ULD slot grids.
++const double slotSpacing = 12.0;
++const double slotRunSpacing = 12.0;
++const EdgeInsets slotPadding = EdgeInsets.all(16);
+ 

@@ -7,6 +7,7 @@ import '../models/container.dart' as model;
 import '../providers/ball_deck_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../models/aircraft.dart' as model; // For SizeEnum
+import '../widgets/slot_layout_constants.dart';
 
 class BallDeckPage extends ConsumerWidget {
   const BallDeckPage({super.key});
@@ -19,7 +20,7 @@ class BallDeckPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Ball Deck')),
       backgroundColor: Colors.black,
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: slotPadding,
         child: SingleChildScrollView(
           child: Column(
             children: List.generate(ballDeck.slots.length, (index) {
@@ -41,7 +42,7 @@ class BallDeckPage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     buildSlot(ref, slotUld, index),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: slotSpacing),
                     buildOverflowSlot(ref, overflowUld1, overflowStartIndex),
                     const SizedBox(width: 8),
                     buildOverflowSlot(
