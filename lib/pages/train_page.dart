@@ -81,6 +81,7 @@ class TrainPage extends ConsumerWidget {
         Positioned(
           bottom: 30,
           child: Container(
+            width: 56,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.5),
@@ -88,6 +89,9 @@ class TrainPage extends ConsumerWidget {
             ),
             child: Text(
               train.label,
+              maxLines: 5,
+              softWrap: true,
+              overflow: TextOverflow.clip,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

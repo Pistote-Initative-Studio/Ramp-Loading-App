@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
@@ -294,6 +295,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           TextField(
             controller: _tugLabelController,
             style: const TextStyle(color: Colors.white),
+            maxLength: 50,
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
             decoration: const InputDecoration(
               labelText: 'Tug Label',
               labelStyle: TextStyle(color: Colors.white),
