@@ -7,7 +7,7 @@ import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
 import '../widgets/uld_chip.dart';
-import '../widgets/slot_layout_constants.dart'
+import '../widgets/slot_layout_constants.dart';
 
 class PlanePage extends ConsumerWidget {
   const PlanePage({super.key});
@@ -21,18 +21,17 @@ class PlanePage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(title: const Text('Plane'), backgroundColor: Colors.black),
-      body:
-          aircraft == null || sequence == null
+      body: aircraft == null || sequence == null
               ? const Center(
                 child: Text(
                   'Please select an aircraft and configuration on the Config Page.',
                   style: TextStyle(color: Colors.white70),
                 ),
               )
+            : SingleChildScrollView(
               padding: slotPadding,
               child: _buildLayout(ref, sequence),
-                ),
-              ),
+             ),
     );
   }
 
