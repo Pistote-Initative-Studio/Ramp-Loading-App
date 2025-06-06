@@ -37,7 +37,7 @@ class BallDeckPage extends ConsumerWidget {
                       : null;
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: slotRunSpacing),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
