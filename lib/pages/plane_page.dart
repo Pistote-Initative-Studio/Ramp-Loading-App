@@ -41,15 +41,54 @@ class PlanePage extends ConsumerWidget {
     final columns = _columnCount(sequence);
 
     if (columns == 2) {
-      return Wrap(
-        direction: Axis.vertical,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: slotSpacing,
-        runSpacing: slotRunSpacing,
-        children: List.generate(
-          slots.length,
-          (i) => _buildSlot(ref, i, _slotLabel(i)),
-        ),
+      final pairCount = slots.length ~/ 2;
+      final remainder = slots.length % 2;
+
+      return Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: List.generate(pairCount, (i) {
+                    final index = i * 2;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            i == pairCount - 1 && remainder == 0
+                                ? 0
+                                : slotRunSpacing,
+                      ),
+                      child: _buildSlot(ref, index, _slotLabel(index)),
+                    );
+                  }),
+                ),
+              ),
+              SizedBox(width: slotSpacing),
+              Expanded(
+                child: Column(
+                  children: List.generate(pairCount, (i) {
+                    final index = i * 2 + 1;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            i == pairCount - 1 && remainder == 0
+                                ? 0
+                                : slotRunSpacing,
+                      ),
+                      child: _buildSlot(ref, index, _slotLabel(index)),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+          if (remainder == 1) ...[
+            SizedBox(height: slotRunSpacing),
+            _buildSlot(ref, pairCount * 2, _slotLabel(pairCount * 2)),
+          ],
+        ],
       );
     } else if (columns == 1) {
       return Column(
