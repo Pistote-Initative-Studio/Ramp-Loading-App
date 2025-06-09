@@ -4,6 +4,7 @@ import 'package:dotted_border/dotted_border.dart';
 import '../models/container.dart' as model;
 import '../providers/storage_provider.dart';
 import '../widgets/uld_chip.dart';
+import '../widgets/slot_layout_constants.dart';
 
 class StoragePage extends ConsumerWidget {
   const StoragePage({super.key});
@@ -21,11 +22,11 @@ class StoragePage extends ConsumerWidget {
         title: const Text('Storage'),
         backgroundColor: Colors.black,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: singleChildScrollView(
+        padding: slotPadding,
         child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: slotSpacing,
+          runSpacing: slotRunSpacing,
           children: List.generate(slots.length, (index) {
             final container = slots[index];
 
