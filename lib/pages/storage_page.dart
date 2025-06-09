@@ -22,7 +22,7 @@ class StoragePage extends ConsumerWidget {
         title: const Text('Storage'),
         backgroundColor: Colors.black,
       ),
-      body: singleChildScrollView(
+      body: SingleChildScrollView(
         padding: slotPadding,
         child: Wrap(
           spacing: slotSpacing,
