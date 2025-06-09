@@ -1,4 +1,4 @@
-enum SizeEnum { PAG_88x125, PRA_96x125, PLA_96x196 }
+enum SizeEnum { PAG_88x125, PRA_96x125, PLA_96x196, EMPTY, Custom }
 
 class UldPosition {
   final int idx;

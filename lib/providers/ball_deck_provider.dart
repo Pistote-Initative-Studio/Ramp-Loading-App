@@ -66,7 +66,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
         newOverflow[i] = StorageContainer(
           id: 'EMPTY_SLOT_$i',
           uld: 'EMPTY_SLOT_$i',
-          type: 'EMPTY',
+          type: SizeEnum.EMPTY,
           size: SizeEnum.PAG_88x125,
           weightKg: 0,
           hasDangerousGoods: false,
@@ -93,7 +93,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
         newOverflow[i] = StorageContainer(
           id: 'EMPTY_SLOT_$i',
           uld: 'EMPTY_SLOT_$i',
-          type: 'EMPTY',
+          type: SizeEnum.EMPTY,
           size: SizeEnum.PAG_88x125,
           weightKg: 0,
           hasDangerousGoods: false,
@@ -107,7 +107,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
         StorageContainer(
           id: 'EMPTY_SLOT_${newOverflow.length}',
           uld: 'EMPTY_SLOT_${newOverflow.length}',
-          type: 'EMPTY',
+          type: SizeEnum.EMPTY,
           size: SizeEnum.PAG_88x125,
           weightKg: 0,
           hasDangerousGoods: false,

@@ -132,7 +132,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   final container = model.StorageContainer(
                     id: UniqueKey().toString(),
                     uld: name,
-                    type: type,
+                    type: SizeEnum.values.byName(type),
                     size: SizeEnum.PAG_88x125,
                     weightKg: 0,
                     hasDangerousGoods: false,
