@@ -41,7 +41,7 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
   void removeContainer(StorageContainer container) {
     final updatedSlots = [
       for (final slot in state.slots)
-        if (slot?.uld == container.uld) null else slot,
+        if (slot?.id == container.id) null else slot,
     ];
     state = state.copyWith(slots: updatedSlots);
   }

@@ -187,13 +187,14 @@ class _AddUldDialogState extends ConsumerState<AddUldDialog> {
         ),
         TextButton(
           onPressed: () {
-            final id = _idController.text.trim();
-            if (id.isNotEmpty) {
+            final label = _idController.text.trim();
+            if (label.isNotEmpty) {
               ref
                   .read(ballDeckProvider.notifier)
                   .addUld(
                     model.StorageContainer(
-                      uld: id,
+                      id: UniqueKey().toString(),
+                      uld: label,
                       type: 'Custom',
                       size: model.SizeEnum.PAG_88x125,
                       weightKg: 0,

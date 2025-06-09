@@ -58,12 +58,13 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     final newOverflow = [...state.overflow];
 
     for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i]?.uld == container.uld) newSlots[i] = null;
+      if (newSlots[i]?.id == container.id) newSlots[i] = null;
     }
 
     for (int i = 0; i < newOverflow.length; i++) {
-      if (newOverflow[i].uld == container.uld) {
+      if (newOverflow[i].id == container.id) {
         newOverflow[i] = StorageContainer(
+          id: 'EMPTY_SLOT_$i',
           uld: 'EMPTY_SLOT_$i',
           type: 'EMPTY',
           size: SizeEnum.PAG_88x125,
@@ -84,12 +85,13 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     final newOverflow = [...state.overflow];
 
     for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i]?.uld == container.uld) newSlots[i] = null;
+      if (newSlots[i]?.id == container.id) newSlots[i] = null;
     }
 
     for (int i = 0; i < newOverflow.length; i++) {
-      if (newOverflow[i].uld == container.uld) {
+      if (newOverflow[i].id == container.id) {
         newOverflow[i] = StorageContainer(
+          id: 'EMPTY_SLOT_$i',
           uld: 'EMPTY_SLOT_$i',
           type: 'EMPTY',
           size: SizeEnum.PAG_88x125,
@@ -103,6 +105,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     while (newOverflow.length <= index) {
       newOverflow.add(
         StorageContainer(
+          id: 'EMPTY_SLOT_${newOverflow.length}',
           uld: 'EMPTY_SLOT_${newOverflow.length}',
           type: 'EMPTY',
           size: SizeEnum.PAG_88x125,

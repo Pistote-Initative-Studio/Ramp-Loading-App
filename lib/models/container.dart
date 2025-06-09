@@ -6,24 +6,28 @@ part 'container.g.dart';
 @HiveType(typeId: 0)
 class StorageContainer extends HiveObject {
   @HiveField(0)
-  final String uld;
+  final String id;
 
   @HiveField(1)
-  final String type;
+  final String uld;
 
   @HiveField(2)
-  final SizeEnum size;
+  final SizeEnum type;
 
   @HiveField(3)
-  int weightKg;
+  final SizeEnum size;
 
   @HiveField(4)
-  bool hasDangerousGoods;
+  int weightKg;
 
   @HiveField(5)
+  bool hasDangerousGoods;
+
+  @HiveField(6)
   final int? colorIndex;
 
   StorageContainer({
+    required this.id,
     required this.uld,
     required this.type,
     required this.size,

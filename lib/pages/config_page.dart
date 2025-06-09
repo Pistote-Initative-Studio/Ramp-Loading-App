@@ -130,6 +130,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               TextButton(
                 onPressed: () {
                   final container = model.StorageContainer(
+                    id: UniqueKey().toString(),
                     uld: name,
                     type: type,
                     size: SizeEnum.PAG_88x125,
