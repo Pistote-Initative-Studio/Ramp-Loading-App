@@ -17,30 +17,33 @@ class StorageContainerAdapter extends TypeAdapter<StorageContainer> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return StorageContainer(
-      uld: fields[0] as String,
-      type: fields[1] as String,
-      size: fields[2] as SizeEnum,
-      weightKg: fields[3] as int,
-      hasDangerousGoods: fields[4] as bool,
-      colorIndex: fields[5] as int?,
+      id: fields[0] as String,
+      uld: fields[1] as String,
+      type: fields[2] as SizeEnum,
+      size: fields[3] as SizeEnum,
+      weightKg: fields[4] as int,
+      hasDangerousGoods: fields[5] as bool,
+      colorIndex: fields[6] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, StorageContainer obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
-      ..write(obj.uld)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.type)
+      ..write(obj.uld)
       ..writeByte(2)
-      ..write(obj.size)
+      ..write(obj.type)
       ..writeByte(3)
-      ..write(obj.weightKg)
+      ..write(obj.size)
       ..writeByte(4)
-      ..write(obj.hasDangerousGoods)
+      ..write(obj.weightKg)
       ..writeByte(5)
+      ..write(obj.hasDangerousGoods)
+      ..writeByte(6)
       ..write(obj.colorIndex);
   }
 
