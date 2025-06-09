@@ -6,7 +6,7 @@ import 'package:dotted_border/dotted_border.dart';
 import '../models/container.dart' as model;
 import '../providers/ball_deck_provider.dart';
 import '../widgets/uld_chip.dart';
-import '../models/aircraft.dart' as aircraftmodel; // For SizeEnum
+import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
 
 class BallDeckPage extends ConsumerWidget {
@@ -118,7 +118,7 @@ class BallDeckPage extends ConsumerWidget {
       builder: (context, candidateData, rejectedData) {
         final isPlaceholder =
             uld == null ||
-            uld.type == aircraft_model.SizeEnum.Empty ||
+            uld.type == SizeEnum.EMPTY ||
             uld.uld.startsWith('EMPTY_SLOT');
         return DottedBorder(
           color: candidateData.isNotEmpty ? Colors.yellow : Colors.white,
@@ -195,8 +195,8 @@ class _AddUldDialogState extends ConsumerState<AddUldDialog> {
                     model.StorageContainer(
                       id: UniqueKey().toString(),
                       uld: label,
-                      type: 'Custom',
-                      size: model.SizeEnum.PAG_88x125,
+                      type: SizeEnum.Custom,
+                      size: SizeEnum.PAG_88x125,
                       weightKg: 0,
                       hasDangerousGoods: false,
                       colorIndex: 0,
