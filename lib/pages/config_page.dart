@@ -132,7 +132,11 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   final container = model.StorageContainer(
                     id: UniqueKey().toString(),
                     uld: name,
-                    type: SizeEnum.values.byName(type),
+                    // Newly created ULDs may not correspond to a predefined
+                    // SizeEnum value. Treat the type as custom and rely on the
+                    // `size` field for any sizing logic instead of converting
+                    // the label into a SizeEnum.
+                    type: SizeEnum.Custom,
                     size: SizeEnum.PAG_88x125,
                     weightKg: 0,
                     hasDangerousGoods: false,
