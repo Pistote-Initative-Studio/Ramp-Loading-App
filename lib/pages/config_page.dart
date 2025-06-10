@@ -54,6 +54,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           _dropdownAircraft = savedAircraft;
         });
       }
+      // Sync the slider with the current ball deck slot count
+      final deckSlots = ref.read(ballDeckProvider).slots.length;
+      setState(() => ballDeckCount = deckSlots);
     });
   }
 
@@ -167,6 +170,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   @override
   Widget build(BuildContext context) {
     final aircraftConfigs = _dropdownAircraft?.configs ?? [];
+    final ballDeck = ref.watch(ballDeckProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -261,6 +265,22 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             divisions: 24,
             label: '$ballDeckCount',
             onChanged: (value) => setState(() => ballDeckCount = value.toInt()),
+          ),
+          ElevatedButton(
+            onPressed:
+                (ballDeckCount != ballDeck.slots.length)
+                    ? () {
+                      ref
+                          .read(ballDeckProvider.notifier)
+                          .setSlotCount(ballDeckCount);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Ball Deck slot count updated'),
+                        ),
+                      );
+                    }
+                    : null,
+            child: const Text('Apply'),
           ),
           const SizedBox(height: 24),
           const Text('📦 ULD Types', style: TextStyle(color: Colors.white)),
