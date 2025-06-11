@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dotted_border/dotted_border.dart';
 import '../models/train.dart';
+import '../models/container.dart' as model;
 import '../providers/train_provider.dart';
+import '../widgets/uld_chip.dart';
 
 class TrainPage extends ConsumerWidget {
   const TrainPage({super.key});
@@ -30,7 +33,7 @@ class TrainPage extends ConsumerWidget {
                       children: [
                         _buildTug(train),
                         const SizedBox(height: 24),
-                        _buildDollyStack(train),
+                        _buildDollyStack(ref, train),
                       ],
                     ),
                   );
@@ -42,99 +45,74 @@ class TrainPage extends ConsumerWidget {
   }
 
   Widget _buildTug(Train train) {
-    final color = _safeColor(train.colorIndex);
-
-    return Draggable<Train>(
-      data: train,
-      feedback: Opacity(opacity: 0.7, child: _tugWidget(train, color)),
-      childWhenDragging: Opacity(opacity: 0.2, child: _tugWidget(train, color)),
-      child: _tugWidget(train, color),
-    );
-  }
-
-  Widget _tugWidget(Train train, Color color) {
-    return Stack(
+    return Container(
+      width: 100,
+      height: 60,
       alignment: Alignment.center,
-      children: [
-        Container(
-          width: 60,
-          height: 80,
-          child: Stack(
-            children: [
-              Positioned(
-                left: 15,
-                top: 20,
-                child: Container(width: 30, height: 40, color: color),
-              ),
-              Positioned(
-                left: 20,
-                top: 0,
-                child: Container(width: 20, height: 20, color: color),
-              ),
-              Positioned(left: 5, top: 5, child: _tire(color)),
-              Positioned(right: 5, top: 5, child: _tire(color)),
-              Positioned(left: 5, bottom: 5, child: _tire(color)),
-              Positioned(right: 5, bottom: 5, child: _tire(color)),
-            ],
-          ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        train.label,
+        style: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
         ),
-        Positioned(
-          bottom: 30,
-          child: Container(
-            width: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              train.label,
-              maxLines: 5,
-              softWrap: true,
-              overflow: TextOverflow.clip,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-      ],
+        textAlign: TextAlign.center,
+      ),
     );
   }
 
-  Widget _tire(Color color) => Container(width: 10, height: 10, color: color);
-
-  Widget _buildDollyStack(Train train) {
+  Widget _buildDollyStack(WidgetRef, Train train) {
     return SizedBox(
-      width: 60,
+      width: 100,
       height: 400,
       child: ListView.builder(
         itemCount: train.dollys.length,
         itemBuilder: (context, index) {
-          return DragTarget<Train>(
-            onAccept: (tug) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Tug ${tug.label} dropped on dolly ${index + 1}',
-                  ),
-                ),
-              );
+          final dolly = train.dollys[index];
+          final uld = dolly.load;
+          return DragTarget<model.StorageContainer>(
+            onAccept: (c) {
+              ref
+                  .read(trainProvider.notifier)
+                  .assignUldToDolly(
+                    trainId: train.id,
+                    dollyIdx: index,
+                    container: c,
+                  );
             },
             builder: (context, candidateData, rejectedData) {
-              return Container(
-                width: 60,
-                height: 60,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color:
-                        candidateData.isNotEmpty ? Colors.yellow : Colors.white,
-                    width: 2,
+              final isActive = candidateData.isNotEmpty;
+              return Padding(
+                padding: const EdgeInserts.only(bottom: 12),
+                child: DottedBorder(
+                  color: isActive ? Colors.yellow : Colors.white,
+                  strokeWidth: 2,
+                  dashPattern: uld == null ? const [4, 4] : const [1, 0],
+                  borderType: BorderType.RRect,
+                  radius: const Radius.circular(8),
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    alignment: Alignment.center,
+                    child:
+                        uld == null
+                            ? const SizedBox()
+                            : LongPressDraggable<model.StorageContainer>(
+                              data: uld,
+                              feedback: Material(
+                                color: Colors.transparent,
+                                child: UldChip(uld),
+                              ),
+                              childWhenDragging: Opacity(
+                                opacity: 0.2,
+                                child: UldChip(uld),
+                              ),
+                              child: UldChip(uld),
+                            ),
                   ),
-                  borderRadius: BorderRadius.circular(8),
                 ),
               );
             },
@@ -142,10 +120,5 @@ class TrainPage extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  Color _safeColor(int index) {
-    final colors = Colors.primaries.where((c) => c != Colors.black).toList();
-    return colors[index % colors.length];
   }
 }

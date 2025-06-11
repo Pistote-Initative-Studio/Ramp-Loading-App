@@ -11,6 +11,18 @@ import '../models/train.dart';
 import '../models/container.dart' as model;
 import '../models/uld_type.dart';
 
+class _TrainDraft {
+  String id;
+  TextEditingController labelController;
+  int dollyCount;
+
+  _TrainDraft({
+    required this.id,
+    required String label,
+    required this.dollyCount,
+  }) : labelController = TextEditingController(text: label);
+}
+
 class ConfigPage extends ConsumerStatefulWidget {
   const ConfigPage({super.key});
 
@@ -19,18 +31,18 @@ class ConfigPage extends ConsumerStatefulWidget {
 }
 
 class _ConfigPageState extends ConsumerState<ConfigPage> {
-  final _tugLabelController = TextEditingController();
   final _customUldController = TextEditingController();
-  int selectedColorIndex = 0;
   int ballDeckCount = 7;
   int storageCount = 20;
+
+  //Train config drafts
+  List<_TrainDraft> _trainDrafts = [];
+  int _trainCount = 0;
 
   Aircraft? _dropdownAircraft;
   LoadingSequence? _dropdownConfig;
 
   final List<String> uldOptions = ['AAX', 'LAY', 'DQF', 'AKE', 'Cookie Sheet'];
-  final List<Color> availableColors =
-      Colors.primaries.where((c) => c != Colors.black).toList();
 
   final List<Aircraft> aircraftList = [
     Aircraft('B762', 'Boeing 767-200 Freighter', [], [
@@ -57,24 +69,28 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       // Sync the slider with the current ball deck slot count
       final deckSlots = ref.read(ballDeckProvider).slots.length;
       setState(() => ballDeckCount = deckSlots);
+
+      final trains = ref.read(trainProvider);
+      setState(() {
+        _trainDrafts = trains 
+        .map((t) => _TrainDraft(
+          id: t.id,
+          label: t.label,
+          dollyCount: t.dollyCount,
+        ))
+      .tolist();
+    _trainCount = _trainDrafts.length;
+      });
     });
   }
 
-  void _addTug() {
-    final label = _tugLabelController.text.trim();
-    if (label.isEmpty) return;
-
-    final tug = Train.withAutoDolly(
-      id: UniqueKey().toString(),
-      label: label,
-      dollyCount: 0,
-      colorIndex: selectedColorIndex,
-    );
-    ref.read(trainProvider.notifier).addTrain(tug);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Tug "$label" added')));
-    _tugLabelController.clear();
+  @override
+  void dispose() {
+    _customUldController.dispose();
+    for (final d in _trainDrafts) {
+      d.labelController.dispose();
+    }
+    super.dispose();
   }
 
   void _addCustomUld() {
@@ -143,7 +159,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     size: SizeEnum.PAG_88x125,
                     weightKg: 0,
                     hasDangerousGoods: false,
-                    colorIndex: selectedColorIndex,
+                    colorIndex: 0,
                   );
                   switch (destination) {
                     case 'Ball Deck':
@@ -317,43 +333,81 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             '🚛 Tugs',
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
-          TextField(
-            controller: _tugLabelController,
-            style: const TextStyle(color: Colors.white),
-            maxLength: 50,
-            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-            decoration: const InputDecoration(
-              labelText: 'Tug Label',
-              labelStyle: TextStyle(color: Colors.white),
-            ),
+          Slider(
+            value: _trainCount.toDouble(),
+            min: 0,
+            max: 10,
+            divisions: 10,
+            label: '$_trainCount',
+            onChanged: (v) {
+              final newCount = v.toInt();
+              setState(() {
+                if (newCount > _trainDrafts.length) {
+                  for (int i = _trainDrafts.length; i < newCount; i++) {
+                    _trainDrafts.add(_TrainDraft(
+                      id: UniqueKey().toString(),
+                      label: 'Tug ${i = 1}',
+                      dollyCount: 0,
+                    ));
+                  }
+                } else if (newCount < _trainDrafts.length) {
+                  for (int i = newCount; i < _trainDrafts.length; i++) {
+                    _trainDrafts[i].labelController.dispose();
+                  }
+                  _trainDrafts = _trainDrafts.sublist(0, newCount);
+                }
+                _trainCount = newCount;
+              });
+            },
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: List.generate(availableColors.length, (i) {
-              final color = availableColors[i];
-              return GestureDetector(
-                onTap: () => setState(() => selectedColorIndex = i),
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color,
-                    border: Border.all(
-                      color:
-                          selectedColorIndex == i
-                              ? Colors.white
-                              : Colors.transparent,
-                      width: 2,
+          Column(
+            children: List.generate(_trainDrafts.length, (i)) {
+              final draft = _trainDrafts[i];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  chrildren; [
+                    textField(
+                      controller: draft.labelController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Tug ${i + 1} Label',
+                        labelStyle: const TextStyle(color: Colors.white54),
+                      ),
+                    )
+                    Slider(
+                      value:dollyCount.toDouble(),
+                      min: 0,
+                      max: 10,
+                      divisions: 10,
+                      label: '${draft.dollyCount}',
+                      onChanged: (v) => setState(() {
+                        draft.dollyCount = v.toInt();
+                      }),
                     ),
-                  ),
+                  ],
                 ),
               );
             }),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton(onPressed: _addTug, child: const Text('Add Tug')),
+          ElevatedButton(
+            onPressed:() {
+              final newTrains = _trainsDrafts
+                .map((d) => Train.withAutoDolly(
+                  id: d.id,
+                  label: d.labelController.text,
+                  dollyCount: d.dollyCount,
+                  colorIndex: 0,
+                ))
+            .toList();
+        ref.read(trainProvider.notifier).setTrains(newTrains);
+        ScoffoldMessenger.of(ontext).showSnackBar(
+          const SnackBar(content: Text('Tug Configuration Updated'))
+        );
+      },
+      child: const Text('Apply'),
+    ),
           const SizedBox(height: 32),
           const Text(
             '🛒 Dolly Setup — coming soon',
