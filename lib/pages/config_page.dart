@@ -32,7 +32,7 @@ class ConfigPage extends ConsumerStatefulWidget {
 
 class _ConfigPageState extends ConsumerState<ConfigPage> {
   final _customUldController = TextEditingController();
-  int ballDeckCount = 7;
+  int ballDeckCount = 6;
   int storageCount = 20;
 
   //Train config drafts
@@ -72,14 +72,17 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
       final trains = ref.read(trainProvider);
       setState(() {
-        _trainDrafts = trains 
-        .map((t) => _TrainDraft(
-          id: t.id,
-          label: t.label,
-          dollyCount: t.dollyCount,
-        ))
-      .tolist();
-    _trainCount = _trainDrafts.length;
+        _trainDrafts =
+            trains
+                .map(
+                  (t) => _TrainDraft(
+                    id: t.id,
+                    label: t.label,
+                    dollyCount: t.dollyCount,
+                  ),
+                )
+                .toList();
+        _trainCount = _trainDrafts.length;
       });
     });
   }
@@ -344,11 +347,13 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               setState(() {
                 if (newCount > _trainDrafts.length) {
                   for (int i = _trainDrafts.length; i < newCount; i++) {
-                    _trainDrafts.add(_TrainDraft(
-                      id: UniqueKey().toString(),
-                      label: 'Tug ${i = 1}',
-                      dollyCount: 0,
-                    ));
+                    _trainDrafts.add(
+                      _TrainDraft(
+                        id: UniqueKey().toString(),
+                        label: 'Tug ${i = 1}',
+                        dollyCount: 0,
+                      ),
+                    );
                   }
                 } else if (newCount < _trainDrafts.length) {
                   for (int i = newCount; i < _trainDrafts.length; i++) {
@@ -361,30 +366,31 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             },
           ),
           Column(
-            children: List.generate(_trainDrafts.length, (i)) {
+            children: List.generate(_trainDrafts.length, (i) {
               final draft = _trainDrafts[i];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  chrildren; [
-                    textField(
+                  children: [
+                    TextField(
                       controller: draft.labelController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: 'Tug ${i + 1} Label',
                         labelStyle: const TextStyle(color: Colors.white54),
                       ),
-                    )
+                    ),
                     Slider(
-                      value:dollyCount.toDouble(),
+                      value: draft.dollyCount.toDouble(),
                       min: 0,
                       max: 10,
                       divisions: 10,
                       label: '${draft.dollyCount}',
-                      onChanged: (v) => setState(() {
-                        draft.dollyCount = v.toInt();
-                      }),
+                      onChanged:
+                          (v) => setState(() {
+                            draft.dollyCount = v.toInt();
+                          }),
                     ),
                   ],
                 ),
@@ -392,22 +398,25 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             }),
           ),
           ElevatedButton(
-            onPressed:() {
-              final newTrains = _trainsDrafts
-                .map((d) => Train.withAutoDolly(
-                  id: d.id,
-                  label: d.labelController.text,
-                  dollyCount: d.dollyCount,
-                  colorIndex: 0,
-                ))
-            .toList();
-        ref.read(trainProvider.notifier).setTrains(newTrains);
-        ScoffoldMessenger.of(ontext).showSnackBar(
-          const SnackBar(content: Text('Tug Configuration Updated'))
-        );
-      },
-      child: const Text('Apply'),
-    ),
+            onPressed: () {
+              final newTrains =
+                  _trainDrafts
+                      .map(
+                        (d) => Train.withAutoDolly(
+                          id: d.id,
+                          label: d.labelController.text,
+                          dollyCount: d.dollyCount,
+                          colorIndex: 0,
+                        ),
+                      )
+                      .toList();
+              ref.read(trainProvider.notifier).setTrains(newTrains);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tug Configuration Updated')),
+              );
+            },
+            child: const Text('Apply'),
+          ),
           const SizedBox(height: 32),
           const Text(
             '🛒 Dolly Setup — coming soon',

@@ -86,7 +86,7 @@ class TrainPage extends ConsumerWidget {
             builder: (context, candidateData, rejectedData) {
               final isActive = candidateData.isNotEmpty;
               return Padding(
-                padding: const EdgeInserts.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: DottedBorder(
                   color: isActive ? Colors.yellow : Colors.white,
                   strokeWidth: 2,
