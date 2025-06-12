@@ -64,7 +64,7 @@ class TrainPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDollyStack(WidgetRef, Train train) {
+  Widget _buildDollyStack(WidgetRef ref, Train train) {
     return SizedBox(
       width: 100,
       height: 400,
