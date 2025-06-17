@@ -10,16 +10,20 @@ import '../models/aircraft.dart';
 import '../models/train.dart';
 import '../models/container.dart' as model;
 import '../models/uld_type.dart';
+import '../widgets/color_picker_dialog.dart';
+import '../widgets/color_palette.dart';
 
 class _TrainDraft {
   String id;
   TextEditingController labelController;
   int dollyCount;
+  int colorIndex;
 
   _TrainDraft({
     required this.id,
     required String label,
     required this.dollyCount,
+    required this.colorIndex,
   }) : labelController = TextEditingController(text: label);
 }
 
@@ -79,10 +83,21 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     id: t.id,
                     label: t.label,
                     dollyCount: t.dollyCount,
+                    colorIndex: t.colorIndex,
                   ),
                 )
                 .toList();
-        _trainCount = _trainDrafts.length;
+        _trainCount = _trainDrafts.isEmpty ? 1 : _trainDrafts.length;
+        if (_trainDrafts.isEmpty) {
+          _trainDrafts.add(
+            _TrainDraft(
+              id: UniqueKey().toString(),
+              label: 'Tug 1',
+              dollyCount: 0,
+              colorIndex: 0,
+            ),
+          );
+        }
       });
     });
   }
@@ -184,6 +199,21 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             ],
           ),
     );
+  }
+
+  void _commitTrains() {
+    final newTrains =
+        _trainDrafts
+            .map(
+              (d) => Train.withAutoDolly(
+                id: d.id,
+                label: d.labelController.text,
+                dollyCount: d.dollyCount,
+                colorIndex: 0, // Default color index
+              ),
+            )
+            .toList();
+    ref.read(trainProvider.notifier).setTrains(newTrains);
   }
 
   @override
@@ -333,14 +363,73 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           ),
           const SizedBox(height: 24),
           const Text(
-            '🚛 Tugs',
+            '🚛 Tugs Configuration',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          Column(
+            children: List.generate(_trainDrafts.length, (i) {
+              final draft = _trainDrafts[i];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: draft.labelController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Tug ${i + 1} Label',
+                          labelStyle: const TextStyle(color: Colors.white54),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (_) => ColorPickerDialog(
+                                onColorPicked: (c) {
+                                  setState(() {
+                                    draft.colorIndex = rampColors
+                                        .indexOf(c)
+                                        .clamp(0, rampColors.length - 1);
+                                  });
+                                },
+                              ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        backgroundColor:
+                            rampColors[draft.colorIndex % rampColors.length],
+                        radius: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _commitTrains();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tug configuration updated')),
+              );
+            },
+            child: const Text('Apply'),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            '🚂 Train Configuration',
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           Slider(
             value: _trainCount.toDouble(),
             min: 0,
-            max: 10,
-            divisions: 10,
+            max: 25,
+            divisions: 25,
             label: '$_trainCount',
             onChanged: (v) {
               final newCount = v.toInt();
@@ -350,8 +439,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     _trainDrafts.add(
                       _TrainDraft(
                         id: UniqueKey().toString(),
-                        label: 'Tug ${i = 1}',
+                        label: 'Tug ${i + 1}',
                         dollyCount: 0,
+                        colorIndex: 0,
                       ),
                     );
                   }
@@ -368,59 +458,38 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           Column(
             children: List.generate(_trainDrafts.length, (i) {
               final draft = _trainDrafts[i];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: draft.labelController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Tug ${i + 1} Label',
-                        labelStyle: const TextStyle(color: Colors.white54),
-                      ),
-                    ),
-                    Slider(
-                      value: draft.dollyCount.toDouble(),
-                      min: 0,
-                      max: 10,
-                      divisions: 10,
-                      label: '${draft.dollyCount}',
-                      onChanged:
-                          (v) => setState(() {
-                            draft.dollyCount = v.toInt();
-                          }),
-                    ),
-                  ],
-                ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    value: draft.dollyCount.toDouble(),
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    label: 'Dollies for Train ${i + 1}: {draft.dollyCount}',
+                    onChanged:
+                        (v) => setState(() => draft.dollyCount = v.toInt()),
+                  ),
+                ],
               );
             }),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Summary: $_trainCount Trains, '
+              '${_trainDrafts.fold<int>(0, (s, d) => s + d.dollyCount)} Total Dollies',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
           ElevatedButton(
             onPressed: () {
-              final newTrains =
-                  _trainDrafts
-                      .map(
-                        (d) => Train.withAutoDolly(
-                          id: d.id,
-                          label: d.labelController.text,
-                          dollyCount: d.dollyCount,
-                          colorIndex: 0,
-                        ),
-                      )
-                      .toList();
-              ref.read(trainProvider.notifier).setTrains(newTrains);
+              _commitTrains();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tug Configuration Updated')),
+                const SnackBar(content: Text('Train Configuration Updated')),
               );
             },
-            child: const Text('Apply'),
-          ),
-          const SizedBox(height: 32),
-          const Text(
-            '🛒 Dolly Setup — coming soon',
-            style: TextStyle(color: Colors.white),
+            child: const Text('Apply Changes'),
           ),
           const SizedBox(height: 32),
           const Text('🏬 Storage Slots', style: TextStyle(color: Colors.white)),

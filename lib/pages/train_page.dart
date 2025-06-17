@@ -5,6 +5,7 @@ import '../models/train.dart';
 import '../models/container.dart' as model;
 import '../providers/train_provider.dart';
 import '../widgets/uld_chip.dart';
+import '../widgets/color_palette.dart';
 
 class TrainPage extends ConsumerWidget {
   const TrainPage({super.key});
@@ -45,12 +46,13 @@ class TrainPage extends ConsumerWidget {
   }
 
   Widget _buildTug(Train train) {
+    final color = rampColors[train.colorIndex % rampColors.length];
     return Container(
       width: 100,
       height: 60,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: color,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
