@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dotted_border/dotted_border.dart';
 import '../models/train.dart';
+import '../models/tug.dart';
 import '../models/container.dart' as model;
 import '../providers/train_provider.dart';
+import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/color_palette.dart';
 
@@ -13,6 +15,7 @@ class TrainPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trains = ref.watch(trainProvider);
+    final tugs = ref.watch(tugProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -26,27 +29,31 @@ class TrainPage extends ConsumerWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                trains.map((train) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: Column(
-                      children: [
-                        _buildTug(train),
-                        const SizedBox(height: 24),
-                        _buildDollyStack(ref, train),
-                      ],
-                    ),
-                  );
-                }).toList(),
+            children: List.generate(trains.length, (i) {
+              final train = trains[i];
+              final Tug? tug = i < tugs.length ? tugs[i] : null;
+              return Padding(
+                padding: const EdgeInsets.only(right: 24),
+                child: Column(
+                  children: [
+                    _buildTug(tug),
+                    const SizedBox(height: 24),
+                    _buildDollyStack(ref, train),
+                  ],
+                ),
+              );
+            }),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTug(Train train) {
-    final color = rampColors[train.colorIndex % rampColors.length];
+  Widget _buildTug(Tug? tug) {
+    if (tug == null) {
+      return const SizedBox(width: 100, height: 60);
+    }
+    final color = rampColors[tug.colorIndex % rampColors.length];
     return Container(
       width: 100,
       height: 60,
@@ -56,7 +63,7 @@ class TrainPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        train.label,
+        tug.label,
         style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,

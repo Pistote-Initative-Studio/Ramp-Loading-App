@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'models/container.dart' as model;
 import 'models/train.dart';
+import 'models/tug.dart';
 import 'pages/train_page.dart';
 import 'pages/ball_deck_page.dart';
 import 'pages/plane_page.dart';
@@ -18,10 +19,12 @@ void main() async {
   Hive.registerAdapter(model.StorageContainerAdapter());
   Hive.registerAdapter(DollyAdapter());
   Hive.registerAdapter(TrainAdapter());
+  Hive.registerAdapter(TugAdapter());
 
   // Open Hive boxes
   await Hive.openBox('ballDeckBox');
   await Hive.openBox('trainBox');
+  await Hive.openBox('tugBox');
 
   runApp(const ProviderScope(child: RampLoaderApp()));
 }

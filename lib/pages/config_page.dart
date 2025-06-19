@@ -4,27 +4,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
 import '../providers/train_provider.dart';
+import '../providers/tug_provider.dart';
 import '../providers/ball_deck_provider.dart';
 import '../providers/storage_provider.dart';
 import '../models/aircraft.dart';
 import '../models/train.dart';
+import '../models/tug.dart';
 import '../models/container.dart' as model;
 import '../models/uld_type.dart';
 import '../widgets/color_picker_dialog.dart';
 import '../widgets/color_palette.dart';
 
-class _TrainDraft {
+class _TugDraft {
   String id;
   TextEditingController labelController;
-  int dollyCount;
   int colorIndex;
 
-  _TrainDraft({
-    required this.id,
-    required String label,
-    required this.dollyCount,
-    required this.colorIndex,
-  }) : labelController = TextEditingController(text: label);
+  _TugDraft({required this.id, required String label, required this.colorIndex})
+    : labelController = TextEditingController(text: label);
+}
+
+class _TrainDraft {
+  String id;
+  int dollyCount;
+
+  _TrainDraft({required this.id, required this.dollyCount});
 }
 
 class ConfigPage extends ConsumerStatefulWidget {
@@ -38,6 +42,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   final _customUldController = TextEditingController();
   int ballDeckCount = 6;
   int storageCount = 20;
+
+  //Tug config drafts
+  List<_TugDraft> _tugDrafts = [];
+  int _tugCount = 0;
 
   //Train config drafts
   List<_TrainDraft> _trainDrafts = [];
@@ -75,28 +83,39 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       setState(() => ballDeckCount = deckSlots);
 
       final trains = ref.read(trainProvider);
+      final tugs = ref.read(tugProvider);
       setState(() {
         _trainDrafts =
             trains
-                .map(
-                  (t) => _TrainDraft(
-                    id: t.id,
-                    label: t.label,
-                    dollyCount: t.dollyCount,
-                    colorIndex: t.colorIndex,
-                  ),
-                )
+                .map((t) => _TrainDraft(id: t.id, dollyCount: t.dollyCount))
                 .toList();
         _trainCount = _trainDrafts.isEmpty ? 1 : _trainDrafts.length;
         if (_trainDrafts.isEmpty) {
           _trainDrafts.add(
-            _TrainDraft(
+            _TrainDraft(id: UniqueKey().toString(), dollyCount: 0),
+          );
+        }
+
+        _tugDrafts =
+            tugs
+                .map(
+                  (t) => _TugDraft(
+                    id: t.id,
+                    label: t.label,
+                    colorIndex: t.colorIndex,
+                  ),
+                )
+                .toList();
+        _TugCount = tugDrafts.length;
+        if (_tugDrafts.isEmpty) {
+          _tugDrafts.add(
+            _TugDraft(
               id: UniqueKey().toString(),
               label: 'Tug 1',
-              dollyCount: 0,
               colorIndex: 0,
             ),
           );
+          _tugCount = 1;
         }
       });
     });
@@ -105,7 +124,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   @override
   void dispose() {
     _customUldController.dispose();
-    for (final d in _trainDrafts) {
+    for (final d in _tugDrafts) {
       d.labelController.dispose();
     }
     super.dispose();
@@ -204,16 +223,32 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   void _commitTrains() {
     final newTrains =
         _trainDrafts
+            .asMap()
+            .entries
             .map(
-              (d) => Train.withAutoDolly(
-                id: d.id,
-                label: d.labelController.text,
-                dollyCount: d.dollyCount,
-                colorIndex: 0, // Default color index
+              (e) => Train.withAutoDolly(
+                id: e.value.id,
+                label: 'Train ${e.key + 1}',
+                dollyCount: e.value.dollyCount,
+                colorIndex: 0,
               ),
             )
             .toList();
     ref.read(trainProvider.notifier).setTrains(newTrains);
+  }
+
+  void _commitTugs() {
+    final newTugs =
+        _tugDrafts
+            .map(
+              (d) => Tug(
+                id: d.id,
+                label: d.labelController.text,
+                colorIndex: d.colorIndex,
+              ),
+            )
+            .toList();
+    ref.read(tugProvider.notifier).setTugs(newTugs);
   }
 
   @override
@@ -366,9 +401,38 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             '🚛 Tugs Configuration',
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
+          Slider(
+            value: _tugCount.toDouble(),
+            min: 0,
+            max: 25,
+            divisions: 25,
+            label: '$_tugCount',
+            onChanged: (v) {
+              final newCount = v.toInt();
+              setState(() {
+                if (newCount > _tugDrafts.length) {
+                  for (int i = _tugDrafts.length; i < newCount; i++) {
+                    _tugDrafts.add(
+                      _TugDraft(
+                        id: UniqueKey().toString(),
+                        label: 'Tug ${i + 1}',
+                        colorIndex: 0,
+                      ),
+                    );
+                  }
+                } else if (newCount < _tugDrafts.length) {
+                  for (int i = newCount; i < _tugDrafts.length; i++) {
+                    _tugDrafts[i].labelController.dispose();
+                  }
+                  _tugDrafts = _tugDrafts.sublist(0, newCount);
+                }
+                _tugCount = newCount;
+              });
+            },
+          ),
           Column(
-            children: List.generate(_trainDrafts.length, (i) {
-              final draft = _trainDrafts[i];
+            children: List.generate(_tugDrafts.length, (i) {
+              final draft = _tugDrafts[i];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -413,7 +477,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              _commitTrains();
+              _commitTugs();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tug configuration updated')),
               );
@@ -437,18 +501,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                 if (newCount > _trainDrafts.length) {
                   for (int i = _trainDrafts.length; i < newCount; i++) {
                     _trainDrafts.add(
-                      _TrainDraft(
-                        id: UniqueKey().toString(),
-                        label: 'Tug ${i + 1}',
-                        dollyCount: 0,
-                        colorIndex: 0,
-                      ),
+                      _TrainDraft(id: UniqueKey().toString(), dollyCount: 0),
                     );
                   }
                 } else if (newCount < _trainDrafts.length) {
-                  for (int i = newCount; i < _trainDrafts.length; i++) {
-                    _trainDrafts[i].labelController.dispose();
-                  }
                   _trainDrafts = _trainDrafts.sublist(0, newCount);
                 }
                 _trainCount = newCount;
