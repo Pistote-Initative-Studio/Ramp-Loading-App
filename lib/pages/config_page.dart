@@ -518,7 +518,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     min: 0,
                     max: 10,
                     divisions: 10,
-                    label: 'Dollies for Train ${i + 1}: {draft.dollyCount}',
+                    label: '${draft.dollyCount}',
                     onChanged:
                         (v) => setState(() => draft.dollyCount = v.toInt()),
                   ),
