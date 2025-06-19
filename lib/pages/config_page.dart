@@ -15,12 +15,12 @@ import '../models/uld_type.dart';
 import '../widgets/color_picker_dialog.dart';
 import '../widgets/color_palette.dart';
 
-class _TugDraft {
+class TugDraft {
   String id;
   TextEditingController labelController;
   int colorIndex;
 
-  _TugDraft({required this.id, required String label, required this.colorIndex})
+  TugDraft({required this.id, required String label, required this.colorIndex})
     : labelController = TextEditingController(text: label);
 }
 
@@ -44,8 +44,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   int storageCount = 20;
 
   //Tug config drafts
-  List<_TugDraft> _tugDrafts = [];
-  int _tugCount = 0;
+  List<TugDraft> tugDrafts = [];
+  int tugCount = 0;
 
   //Train config drafts
   List<_TrainDraft> _trainDrafts = [];
@@ -96,26 +96,22 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           );
         }
 
-        _tugDrafts =
+        tugDrafts =
             tugs
                 .map(
-                  (t) => _TugDraft(
+                  (t) => TugDraft(
                     id: t.id,
                     label: t.label,
                     colorIndex: t.colorIndex,
                   ),
                 )
                 .toList();
-        _TugCount = tugDrafts.length;
-        if (_tugDrafts.isEmpty) {
-          _tugDrafts.add(
-            _TugDraft(
-              id: UniqueKey().toString(),
-              label: 'Tug 1',
-              colorIndex: 0,
-            ),
+        tugCount = tugDrafts.length;
+        if (tugDrafts.isEmpty) {
+          tugDrafts.add(
+            TugDraft(id: UniqueKey().toString(), label: 'Tug 1', colorIndex: 0),
           );
-          _tugCount = 1;
+          tugCount = 1;
         }
       });
     });
@@ -124,7 +120,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   @override
   void dispose() {
     _customUldController.dispose();
-    for (final d in _tugDrafts) {
+    for (final d in tugDrafts) {
       d.labelController.dispose();
     }
     super.dispose();
@@ -239,7 +235,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
   void _commitTugs() {
     final newTugs =
-        _tugDrafts
+        tugDrafts
             .map(
               (d) => Tug(
                 id: d.id,
@@ -402,37 +398,37 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           Slider(
-            value: _tugCount.toDouble(),
+            value: tugCount.toDouble(),
             min: 0,
             max: 25,
             divisions: 25,
-            label: '$_tugCount',
+            label: '$tugCount',
             onChanged: (v) {
               final newCount = v.toInt();
               setState(() {
-                if (newCount > _tugDrafts.length) {
-                  for (int i = _tugDrafts.length; i < newCount; i++) {
-                    _tugDrafts.add(
-                      _TugDraft(
+                if (newCount > tugDrafts.length) {
+                  for (int i = tugDrafts.length; i < newCount; i++) {
+                    tugDrafts.add(
+                      TugDraft(
                         id: UniqueKey().toString(),
                         label: 'Tug ${i + 1}',
                         colorIndex: 0,
                       ),
                     );
                   }
-                } else if (newCount < _tugDrafts.length) {
-                  for (int i = newCount; i < _tugDrafts.length; i++) {
-                    _tugDrafts[i].labelController.dispose();
+                } else if (newCount < tugDrafts.length) {
+                  for (int i = newCount; i < tugDrafts.length; i++) {
+                    tugDrafts[i].labelController.dispose();
                   }
-                  _tugDrafts = _tugDrafts.sublist(0, newCount);
+                  tugDrafts = tugDrafts.sublist(0, newCount);
                 }
-                _tugCount = newCount;
+                tugCount = newCount;
               });
             },
           ),
           Column(
-            children: List.generate(_tugDrafts.length, (i) {
-              final draft = _tugDrafts[i];
+            children: List.generate(tugDrafts.length, (i) {
+              final draft = tugDrafts[i];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(

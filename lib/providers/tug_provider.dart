@@ -3,14 +3,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/tug.dart';
 
 final tugProvider = StateNotifierProvider<TugNotifier, List<Tug>>((ref) {
-  return TugNotifier();
+  return TugNotifier(Hive.box('tugBox'));
 });
 
 class TugNotifier extends StateNotifier<List<Tug>> {
-  final _box = Hive.box('tugBox');
+  final Box box;
   static const String tugsKey = 'tugs';
 
-  TugNotifier() : super([]) {
+  TugNotifier(this.box) : super([]) {
     _loadState();
   }
 
@@ -22,7 +22,7 @@ class TugNotifier extends StateNotifier<List<Tug>> {
   }
 
   void _saveState() {
-    _box.put(tugsKey, state);
+    box.put(tugsKey, state);
   }
 
   void setTugs(List<Tug> tugs) {
