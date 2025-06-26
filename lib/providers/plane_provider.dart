@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
 import '../models/aircraft.dart';
+import '../models/plane.dart';
 
 class PlaneState {
   final LoadingSequence? selectedSequence;
@@ -21,6 +22,29 @@ class PlaneState {
 
 class PlaneNotifier extends StateNotifier<PlaneState> {
   PlaneNotifier() : super(PlaneState(selectedSequence: null, slots: []));
+
+  void loadPlane(Plane plane) {
+    final sequence = LoadingSequence(
+      plane.sequenceLabel,
+      plane.sequenceLabel,
+      plane.sequenceOrder,
+    );
+    state = PlaneState(
+      selectedSequence: sequence,
+      slots: List.from(plane.slots),
+    );
+  }
+
+  Plane exportPlane(Plane origional) {
+    return Plane(
+      id: origional.id,
+      name: origional.name,
+      aircraftTypeCode: origional.aircraftTypeCode,
+      sequenceLabel: state.selectedSequence?.label ?? origional.sequenceLabel,
+      sequenceOrder: state.selectedSequence?.order ?? origional.sequenceOrder,
+      slots: List.from(state.slots),
+    );
+  }
 
   void selectSequence(LoadingSequence sequence) {
     final newSlots = List<StorageContainer?>.filled(

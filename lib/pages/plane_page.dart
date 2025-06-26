@@ -6,21 +6,77 @@ import '../models/container.dart' as model;
 import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
+import '../providers/planes_provider.dart';
+import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
+
+final List<Aircraft> aircraftList = [
+  Aircraft('B762', 'Boeinf 767-200 Freighter', [], [
+    LoadingSequence('A', 'A', List.generate(19, (i) => i)),
+    LoadingSequence('B', 'B', List.generate(21, (i) => i)),
+    LoadingSequence('C', 'C', List.generate(10, (i) => i)),
+    LoadingSequence('D', 'D', List.generate(13, (i) => i)),
+    LoadingSequence('E', 'E', List.generate(12, (i) => i)),
+  ]),
+  Aircraft('B763', 'Boeing 767-300 Freighter', [], []),
+  Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
+];
 
 class PlanePage extends ConsumerWidget {
   const PlanePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final planes = ref.watch(planesProvider);
+    final selectedId =ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
     final sequence = planeState.selectedSequence;
 
+    Plane? selectedplane;
+    if (selectedId != null) {
+      try {
+        selectedplane = planes.firstWhere((p) => p.id == selectedId);
+      } catch (_) {}
+    }
+    if (selectedPlane == null && planes.isNotEmpty) {
+      selectedplane = planes.first;
+      ref.read(selectedPlaneIdProvider.notifier).state = selectedplane.id;
+      ref.read(planeProvider.notifier).loadPlane(selectedplane);
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(title: const Text('Plane'), backgroundColor: Colors.black),
+      appBar: AppBar(
+        title: const Text('Plane'),
+        backgroundColor: Colors.black,
+        actions: [
+          if (planes.isNotEmpty)
+            DropdownButton<String>(
+              value: selectedplane?.id,
+              underline: const SizedBox.shrink(),
+              dropdownColor: Colors.black,
+              items: planes
+                  .map(
+                    (p) => DropdownMenuItem<String>(
+                      value: p.id,
+                      child: Text(p.name, style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    .toList(),
+              onChanged: (val) {
+                if (val == null) return;
+                ref.read(selectedPlaneIdProvider.notifier).state = val;
+                final plane = planes.firstWhere((p) => p.id == val);
+                ref.read(planeProvider.notifier).loadPlane(plane);
+                final aircraft = 
+                    aircraftList.firstWhere((a) => a.typeCode == plane.aircraftType);
+                ref.read(aircraftProvider.notifier).state = aircraft;
+              },
+            ),
+        ],
+      ),
       body:
           aircraft == null || sequence == null
               ? const Center(
@@ -156,9 +212,18 @@ class PlanePage extends ConsumerWidget {
   Widget _buildSlot(WidgetRef ref, int index, String label) {
     final container = ref.watch(planeProvider).slots[index];
 
+    final planeId = ref.watch(selectedPlaneIdProvider);
+    
     return DragTarget<model.StorageContainer>(
       onAccept: (c) {
         ref.read(planeProvider.notifier).placeContainer(index, c);
+        if (planeId != null) {
+          fnal planes = ref.read(planesProvider);
+          try { 
+            final plane = planes.firstWhere((p) => p.id == planeId);
+            ref.read(planesProvider.notifier).updatePlane(updated);
+          } catch (_) {}
+        }
       },
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;

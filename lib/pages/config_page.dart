@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
+import '../providers/planes_provider.dart';
+import '../models/plane.dart';
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../providers/ball_deck_provider.dart';
@@ -31,6 +33,20 @@ class _TrainDraft {
   _TrainDraft({required this.id, required this.dollyCount});
 }
 
+class _PlaneDraft {
+  String id;
+  TextEditingController nameController;
+  Aircraft? aircraft;
+  LoadingSequence? config;
+
+  _PlaneDraft({
+    required this.id,
+    required String name,
+    this.aircraft,
+    this.config,
+  }) : nameController = TextEditingController(text: name);
+}
+
 class ConfigPage extends ConsumerStatefulWidget {
   const ConfigPage({super.key});
 
@@ -50,6 +66,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   //Train config drafts
   List<_TrainDraft> _trainDrafts = [];
   int _trainCount = 0;
+
+  // Plane config drafts
+  List<_PlaneDraft> _planeDrafts = [];
+  int _planeCount = 0;
 
   Aircraft? _dropdownAircraft;
   LoadingSequence? _dropdownConfig;
@@ -84,6 +104,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
       final trains = ref.read(trainProvider);
       final tugs = ref.read(tugProvider);
+      final planes = ref.read(planesProvider);
       setState(() {
         _trainDrafts =
             trains
@@ -113,6 +134,31 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           );
           tugCount = 1;
         }
+
+        _planeDrafts =
+            planes.map((p) {
+              final ac = aircraftList.firstWhere(
+                (a) => a.typeCode == p.aircraftTypeCode,
+                orElse: () => aircraftList.first,
+              );
+              LoadingSequence? cfg;
+              try {
+                cfg = ac.configs.firstWhere((c) => c.label == p.sequenceLabel);
+              } catch (_) {}
+              return _PlaneDraft(
+                id: p.id,
+                name: p.name,
+                aircraft: ac,
+                config: cfg,
+              );
+            }).toList();
+        _planeCount = planeDrafts.length;
+        if (_planeDrafts.isEmpty) {
+          _planeDrafts.add(
+            _PlaneDraft(id: UniqueKey().toString(), name: 'Plane 1'),
+          );
+          _planeCount = 1;
+        }
       });
     });
   }
@@ -122,6 +168,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     _customUldController.dispose();
     for (final d in tugDrafts) {
       d.labelController.dispose();
+    }
+    for (final p in _planeDrafts) {
+      p.nameController.dispose();
     }
     super.dispose();
   }
@@ -245,6 +294,79 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             )
             .toList();
     ref.read(tugProvider.notifier).setTugs(newTugs);
+  }
+
+  void _applyPlane(int index) {
+    final draft = _planeDrafts[index];
+    final ac = draft.aircraft;
+    final cfg = draft.config;
+    if (ac == null || cfg == null) return;
+    final plane = Plane(
+      id: draft.id,
+      name: draft.nameController.text,
+      aircraftTypeCode: ac.typeCode,
+      sequenceLabel: cfg.label,
+      sequenceOrder: cfg.order,
+      slots: List.filled(cfg.order.length, null),
+    );
+    final existing = ref.read(planeProvider).any((p) => p.id == plane.id);
+    if (existing) {
+      ref.read(planesProvider.notifier).updatePlane(plane);
+    } else {
+      ref.read(planesProvider.notifier).addPlane(plane);
+    }
+    ref.read(aircraftProvider.notifier).state = ac;
+    ref.read(planeProvider.notifier).loadPlane(plane);
+    ref.read(selectedPlaneIdProvider.notifier).state = plane.id;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(Snackbar(content: Text('${plane.name} applied')));
+  }
+
+  void _deletePlane(int index) {
+    final draft = _planeDrafts[index];
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Are you sure you want to remove this plane?',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () {
+                  ref.read(planesProvider.notifier).removePlane(draft.id);
+                  setState(() {
+                    _planeDrafts.removeAt(index);
+                    _planeCount = _planeDrafts.length;
+                  });
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _addPlane() {
+    setState(() {
+      if (_planeDrafts.length < 15) {
+        _planeDrafts.add(
+          _PlaneDraft(
+            id: UniqueKey().toString(),
+            name: 'Plane ${_planeDrafts.length + 1}',
+          ),
+        );
+        _planeCount = _planeDrafts.length;
+      }
+    });
   }
 
   @override
@@ -543,6 +665,102 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             },
             child: const Text('Apply Changes'),
           ),
+          const SizedBox(height: 32),
+          const Text(
+            '✈️ Planes',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          Column(
+            children: List.generate(_planeDrafts.length, (i) {
+              final draft = _planeDrafts[i];
+              final cfgs = draft.aircraft?.configs ?? [];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: draft.nameController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Plane Name',
+                              labelStyle: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () => _deletePlane(i),
+                        ),
+                        ElevatedButton(
+                          onPressed:
+                              draft.aircraft != null && draft.config != null
+                                  ? () => _applyPlane(i)
+                                  : null,
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                    DropdownButton<Aircraft>(
+                      value: draft.aircraft,
+                      isExpanded: true,
+                      dropdownColor: Colors.black,
+                      hint: const Text(
+                        'Select Aircraft',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      items:
+                          aircraftList
+                              .map(
+                                (a) => DropdownMenuItem(
+                                  value: a,
+                                  child: Text(a.name),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          draft.aircraft = value;
+                          draft.config =
+                              null; // Reset config when aircraft changes
+                        });
+                      },
+                    ),
+                    if (cfgs.isNotEmpty)
+                      DropdownButton<LoadingSequence>(
+                        value: draft.config,
+                        isExpanded: true,
+                        dropdownColor: Colors.black,
+                        hint: const Text(
+                          'Select Configuration',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        items:
+                            cfgs
+                                .map(
+                                  (cfg) => DropdownMenuItem(
+                                    value: cfg,
+                                    child: Text(cfg.label),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (cfg) {
+                          setState(() => draft.config = cfg);
+                        },
+                      ),
+                  ],
+                ),
+              );
+            }),
+          ),
+          if (_planeDrafts.length < 15)
+            ElevatedButton(
+              onPressed: _addPlane,
+              child: const Text('Add Plane'),
+            ),
           const SizedBox(height: 32),
           const Text('🏬 Storage Slots', style: TextStyle(color: Colors.white)),
           Slider(
