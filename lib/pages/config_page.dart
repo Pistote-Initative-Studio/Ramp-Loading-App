@@ -72,9 +72,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   int _planeCount = 0;
   List<_PlaneDraft> planeDrafts = [];
 
-  Aircraft? _dropdownAircraft;
-  LoadingSequence? _dropdownConfig;
-
   final List<String> uldOptions = ['AAX', 'LAY', 'DQF', 'AKE', 'Cookie Sheet'];
 
   final List<Aircraft> aircraftList = [
@@ -93,12 +90,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final savedAircraft = ref.read(aircraftProvider);
-      if (savedAircraft != null) {
-        setState(() {
-          _dropdownAircraft = savedAircraft;
-        });
-      }
       // Sync the slider with the current ball deck slot count
       final deckSlots = ref.read(ballDeckProvider).slots.length;
       setState(() => ballDeckCount = deckSlots);
@@ -375,7 +366,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
   @override
   Widget build(BuildContext context) {
-    final aircraftConfigs = _dropdownAircraft?.configs ?? [];
     final ballDeck = ref.watch(ballDeckProvider);
 
     return Scaffold(
@@ -385,80 +375,100 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            '✈️ Select Aircraft',
-            style: TextStyle(color: Colors.white),
+            'Planes',
+            style: TextStyle(color: Colors.white, fontSize: 18),
           ),
-          DropdownButton<Aircraft>(
-            value: _dropdownAircraft,
-            isExpanded: true,
-            dropdownColor: Colors.black,
-            items:
-                aircraftList
-                    .map((a) => DropdownMenuItem(value: a, child: Text(a.name)))
-                    .toList(),
-            onChanged: (value) {
-              setState(() {
-                _dropdownAircraft = value;
-                _dropdownConfig = null;
-              });
-            },
-          ),
-          if (aircraftConfigs.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                const Text(
-                  '📋 Select Configuration',
-                  style: TextStyle(color: Colors.white),
-                ),
-                DropdownButton<LoadingSequence>(
-                  value: _dropdownConfig,
-                  isExpanded: true,
-                  dropdownColor: Colors.black,
-                  hint: const Text(
-                    'Choose Configuration',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  items:
-                      aircraftConfigs
-                          .map(
-                            (cfg) => DropdownMenuItem(
-                              value: cfg,
-                              child: Text(
-                                cfg.label,
-                                style: const TextStyle(color: Colors.white),
-                              ),
+          Column(
+            children: List.generate(_planeDrafts.length, (i) {
+              final draft = _planeDrafts[i];
+              final cfgs = draft.aircraft?.configs ?? [];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: draft.nameController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: 'Plane Identifier',
+                              labelStyle: TextStyle(color: Colors.white70),
                             ),
-                          )
-                          .toList(),
-                  onChanged: (cfg) {
-                    setState(() => _dropdownConfig = cfg);
-                  },
-                ),
-              ],
-            ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed:
-                (_dropdownAircraft != null && _dropdownConfig != null)
-                    ? () {
-                      ref.read(aircraftProvider.notifier).state =
-                          _dropdownAircraft;
-                      ref
-                          .read(planeProvider.notifier)
-                          .selectSequence(_dropdownConfig!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${_dropdownAircraft!.name} with config ${_dropdownConfig!.label} selected',
                           ),
                         ),
-                      );
-                    }
-                    : null,
-            child: const Text('Select'),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () => _deletePlane(i),
+                        ),
+                        ElevatedButton(
+                          onPressed:
+                              draft.aircraft != null && draft.config != null
+                                  ? () => _applyPlane(i)
+                                  : null,
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                    DropdownButton<Aircraft>(
+                      value: draft.aircraft,
+                      isExpanded: true,
+                      dropdownColor: Colors.black,
+                      hint: const Text(
+                        'Select Aircraft',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      items:
+                          aircraftList
+                              .map(
+                                (a) => DropdownMenuItem(
+                                  value: a,
+                                  child: Text(a.name),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          draft.aircraft = value;
+                          draft.config =
+                              null; // Reset config when aircraft changes
+                        });
+                      },
+                    ),
+                    if (cfgs.isNotEmpty)
+                      DropdownButton<LoadingSequence>(
+                        value: draft.config,
+                        isExpanded: true,
+                        dropdownColor: Colors.black,
+                        hint: const Text(
+                          'Select Configuration',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        items:
+                            cfgs
+                                .map(
+                                  (cfg) => DropdownMenuItem(
+                                    value: cfg,
+                                    child: Text(cfg.label),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (cfg) {
+                          setState(() => draft.config = cfg);
+                        },
+                      ),
+                  ],
+                ),
+              );
+            }),
           ),
+          if (_planeDrafts.length < 15)
+            ElevatedButton(
+              onPressed: _addPlane,
+              child: const Text('Add Plane'),
+            ),
           const SizedBox(height: 24),
           const Text(
             '🟦 Ball Deck Slots',
@@ -669,102 +679,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             },
             child: const Text('Apply Changes'),
           ),
-          const SizedBox(height: 32),
-          const Text(
-            '✈️ Planes',
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          Column(
-            children: List.generate(_planeDrafts.length, (i) {
-              final draft = _planeDrafts[i];
-              final cfgs = draft.aircraft?.configs ?? [];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: draft.nameController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
-                              labelText: 'Plane Name',
-                              labelStyle: TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () => _deletePlane(i),
-                        ),
-                        ElevatedButton(
-                          onPressed:
-                              draft.aircraft != null && draft.config != null
-                                  ? () => _applyPlane(i)
-                                  : null,
-                          child: const Text('Apply'),
-                        ),
-                      ],
-                    ),
-                    DropdownButton<Aircraft>(
-                      value: draft.aircraft,
-                      isExpanded: true,
-                      dropdownColor: Colors.black,
-                      hint: const Text(
-                        'Select Aircraft',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      items:
-                          aircraftList
-                              .map(
-                                (a) => DropdownMenuItem(
-                                  value: a,
-                                  child: Text(a.name),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          draft.aircraft = value;
-                          draft.config =
-                              null; // Reset config when aircraft changes
-                        });
-                      },
-                    ),
-                    if (cfgs.isNotEmpty)
-                      DropdownButton<LoadingSequence>(
-                        value: draft.config,
-                        isExpanded: true,
-                        dropdownColor: Colors.black,
-                        hint: const Text(
-                          'Select Configuration',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        items:
-                            cfgs
-                                .map(
-                                  (cfg) => DropdownMenuItem(
-                                    value: cfg,
-                                    child: Text(cfg.label),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (cfg) {
-                          setState(() => draft.config = cfg);
-                        },
-                      ),
-                  ],
-                ),
-              );
-            }),
-          ),
-          if (_planeDrafts.length < 15)
-            ElevatedButton(
-              onPressed: _addPlane,
-              child: const Text('Add Plane'),
-            ),
           const SizedBox(height: 32),
           const Text('🏬 Storage Slots', style: TextStyle(color: Colors.white)),
           Slider(
