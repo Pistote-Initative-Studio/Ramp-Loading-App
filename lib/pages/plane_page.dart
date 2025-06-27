@@ -41,8 +41,8 @@ class PlanePage extends ConsumerWidget {
     final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
+    final configs = planeState.configs;
     final sequence = planeState.selectedSequence;
-    final sequence = aircraft?.configs ?? [];
 
     LoadingSequence? selectedConfig;
     if (sequence != null) {
@@ -60,7 +60,16 @@ class PlanePage extends ConsumerWidget {
     if (selectedPlane == null && planes.isNotEmpty) {
       selectedPlane = planes.first;
       ref.read(selectedPlaneIdProvider.notifier).state = selectedPlane.id;
-      ref.read(planeProvider.notifier).loadPlane(selectedPlane);
+      final intialAircraft =
+          aircraft ??
+          aircraftList.firstWhere(
+            (a) => a.typeCode == selectedPlane.aircraftTypeCode,
+            orElse: () => aircraftList.first,
+          );
+      ref.read(aircraftProvider.notifier).state = intialAircraft;
+      ref
+          .read(planeProvider.notifier)
+          .loadPlane(selectedPlane, intialAircraft.configs);
     }
 
     return Scaffold(
@@ -92,11 +101,13 @@ class PlanePage extends ConsumerWidget {
                     if (val == null) return;
                     ref.read(selectedPlaneIdProvider.notifier).state = val;
                     final plane = planes.firstWhere((p) => p.id == val);
-                    ref.read(planeProvider.notifier).loadPlane(plane);
                     final aircraft = aircraftList.firstWhere(
                       (a) => a.typeCode == plane.aircraftTypeCode,
                       orElse: () => aircraftList.first,
                     );
+                    ref
+                        .read(planeProvider.notifier)
+                        .loadPlane(plane, aircraft.configs);
                     ref.read(aircraftProvider.notifier).state = aircraft;
                   },
                 ),

@@ -5,25 +5,33 @@ import '../models/plane.dart';
 
 class PlaneState {
   final LoadingSequence? selectedSequence;
+  final List<LoadingSequence> configs;
   final List<StorageContainer?> slots;
 
-  PlaneState({required this.selectedSequence, required this.slots});
+  PlaneState({
+    required this.selectedSequence,
+    required this.configs,
+    required this.slots,
+  });
 
   PlaneState copyWith({
     LoadingSequence? selectedSequence,
+    List<LoadingSequence>? configs,
     List<StorageContainer?>? slots,
   }) {
     return PlaneState(
       selectedSequence: selectedSequence ?? this.selectedSequence,
+      configs: configs ?? this.configs,
       slots: slots ?? this.slots,
     );
   }
 }
 
 class PlaneNotifier extends StateNotifier<PlaneState> {
-  PlaneNotifier() : super(PlaneState(selectedSequence: null, slots: []));
+  PlaneNotifier()
+    : super(PlaneState(selectedSequence: null, configs: const [], slots: []));
 
-  void loadPlane(Plane plane) {
+  void loadPlane(Plane plane, [List<LoadingSequence> configs = const []]) {
     final sequence = LoadingSequence(
       plane.sequenceLabel,
       plane.sequenceLabel,
@@ -31,6 +39,7 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
     );
     state = PlaneState(
       selectedSequence: sequence,
+      configs: configs,
       slots: List.from(plane.slots),
     );
   }

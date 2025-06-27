@@ -311,7 +311,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       ref.read(planesProvider.notifier).addPlane(plane);
     }
     ref.read(aircraftProvider.notifier).state = ac;
-    ref.read(planeProvider.notifier).loadPlane(plane);
+    ref.read(planeProvider.notifier).loadPlane(plane, ac.configs);
     ref.read(selectedPlaneIdProvider.notifier).state = plane.id;
     ScaffoldMessenger.of(
       context,
