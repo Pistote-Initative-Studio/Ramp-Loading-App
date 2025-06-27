@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:hive/hive.dart';
 import '../models/container.dart' as model;
 import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
@@ -28,7 +29,15 @@ class PlanePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!Hive.isBoxOpen('planeBox')) {
+      return _buildNoPlaneScaffold();
+    }
+
     final planes = ref.watch(planesProvider);
+    if (planes.isEmpty) {
+      return _buildNoPlaneScaffold();
+    }
+
     final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
@@ -95,6 +104,20 @@ class PlanePage extends ConsumerWidget {
                 padding: slotPadding,
                 child: _buildLayout(ref, sequence),
               ),
+    );
+  }
+
+  Widget _buildNoPlaneScaffold() {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text('Plane'), backgroundColor: Colors.black),
+      body: const Center(
+        child: Text(
+          'No plane selected. Please select a plane on the Config Page.',
+          style: TextStyle(color: Colors.white70),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
