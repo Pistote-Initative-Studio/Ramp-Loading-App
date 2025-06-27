@@ -311,7 +311,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       sequenceOrder: cfg.order,
       slots: List.filled(cfg.order.length, null),
     );
-    final existing = ref.read(planeProvider).any((p) => p.id == plane.id);
+    final existing = ref.read(planesProvider).any((p) => p.id == plane.id);
     if (existing) {
       ref.read(planesProvider.notifier).updatePlane(plane);
     } else {
