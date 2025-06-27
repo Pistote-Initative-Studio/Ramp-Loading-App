@@ -42,6 +42,14 @@ class PlanePage extends ConsumerWidget {
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
     final sequence = planeState.selectedSequence;
+    final sequence = aircraft?.configs ?? [];
+
+    LoadingSequence? selectedConfig;
+    if (sequence != null) {
+      try {
+        selectedConfig = configs.firstWhere((c) => c.label == sequence.label);
+      } catch (_) {}
+    }
 
     Plane? selectedPlane;
     if (selectedId != null) {
@@ -62,33 +70,69 @@ class PlanePage extends ConsumerWidget {
         backgroundColor: Colors.black,
         actions: [
           if (planes.isNotEmpty)
-            DropdownButton<String>(
-              value: selectedPlane?.id,
-              underline: const SizedBox.shrink(),
-              dropdownColor: Colors.black,
-              items:
-                  planes
-                      .map(
-                        (p) => DropdownMenuItem(
-                          value: p.id,
-                          child: Text(
-                            p.name,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (val) {
-                if (val == null) return;
-                ref.read(selectedPlaneIdProvider.notifier).state = val;
-                final plane = planes.firstWhere((p) => p.id == val);
-                ref.read(planeProvider.notifier).loadPlane(plane);
-                final aircraft = aircraftList.firstWhere(
-                  (a) => a.typeCode == plane.aircraftTypeCode,
-                  orElse: () => aircraftList.first,
-                );
-                ref.read(aircraftProvider.notifier).state = aircraft;
-              },
+            Row(
+              children: [
+                DropdownButton<String>(
+                  value: selectedPlane?.id,
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: Colors.black,
+                  items:
+                      planes
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p.id,
+                              child: Text(
+                                p.name,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (val) {
+                    if (val == null) return;
+                    ref.read(selectedPlaneIdProvider.notifier).state = val;
+                    final plane = planes.firstWhere((p) => p.id == val);
+                    ref.read(planeProvider.notifier).loadPlane(plane);
+                    final aircraft = aircraftList.firstWhere(
+                      (a) => a.typeCode == plane.aircraftTypeCode,
+                      orElse: () => aircraftList.first,
+                    );
+                    ref.read(aircraftProvider.notifier).state = aircraft;
+                  },
+                ),
+                if (configs.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  DropdownButton<LoadingSequence>(
+                    value: selectedConfig,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: Colors.black,
+                    items:
+                        configs
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(
+                                  c.label,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (cfg) {
+                      if (cfg == null) return;
+                      ref.read(planeProvider.notifier).selectSequence(cfg);
+                      final pid = selectedPlane?.id;
+                      if (pid != null) {
+                        final plane = planes.firstWhere((p) => p.id == pid);
+                        final updated = ref
+                            .read(planeProvider.notifier)
+                            .exportPlane(plane);
+                        ref.read(planesProvider.notifier).updatePlane(updated);
+                      }
+                    },
+                  ),
+                ],
+              ],
             ),
         ],
       ),
@@ -96,8 +140,9 @@ class PlanePage extends ConsumerWidget {
           aircraft == null || sequence == null
               ? const Center(
                 child: Text(
-                  'Please select an aircraft and configuration on the Config Page.',
+                  'Please select a plane and configuration using the dropdowns above.',
                   style: TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
                 ),
               )
               : SingleChildScrollView(
@@ -113,7 +158,7 @@ class PlanePage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Plane'), backgroundColor: Colors.black),
       body: const Center(
         child: Text(
-          'No plane selected. Please select a plane on the Config Page.',
+          'No plane selected. Please add a plane on the Config Page.',
           style: TextStyle(color: Colors.white70),
           textAlign: TextAlign.center,
         ),

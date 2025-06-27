@@ -292,8 +292,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   void _applyPlane(int index) {
     final draft = _planeDrafts[index];
     final ac = draft.aircraft;
-    final cfg = draft.config;
-    if (ac == null || cfg == null) return;
+    LoadingSequence? cfg = draft.config;
+    if (ac == null) return;
+    cfg = cfg ?? (ac.configs.isNotEmpty ? ac.configs.first : null);
+    if (cfg == null) return;
     final plane = Plane(
       id: draft.id,
       name: draft.nameController.text,
@@ -381,7 +383,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           Column(
             children: List.generate(_planeDrafts.length, (i) {
               final draft = _planeDrafts[i];
-              final cfgs = draft.aircraft?.configs ?? [];
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Column(
@@ -405,7 +406,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                         ),
                         ElevatedButton(
                           onPressed:
-                              draft.aircraft != null && draft.config != null
+                              draft.aircraft != null
                                   ? () => _applyPlane(i)
                                   : null,
                           child: const Text('Apply'),
@@ -437,28 +438,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                         });
                       },
                     ),
-                    if (cfgs.isNotEmpty)
-                      DropdownButton<LoadingSequence>(
-                        value: draft.config,
-                        isExpanded: true,
-                        dropdownColor: Colors.black,
-                        hint: const Text(
-                          'Select Configuration',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        items:
-                            cfgs
-                                .map(
-                                  (cfg) => DropdownMenuItem(
-                                    value: cfg,
-                                    child: Text(cfg.label),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (cfg) {
-                          setState(() => draft.config = cfg);
-                        },
-                      ),
                   ],
                 ),
               );
