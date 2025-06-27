@@ -70,6 +70,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   // Plane config drafts
   List<_PlaneDraft> _planeDrafts = [];
   int _planeCount = 0;
+  List<_PlaneDraft> planeDrafts = [];
 
   Aircraft? _dropdownAircraft;
   LoadingSequence? _dropdownConfig;
@@ -152,6 +153,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                 config: cfg,
               );
             }).toList();
+        planeDrafts = _planeDrafts;
         _planeCount = planeDrafts.length;
         if (_planeDrafts.isEmpty) {
           _planeDrafts.add(
@@ -320,7 +322,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     ref.read(selectedPlaneIdProvider.notifier).state = plane.id;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(Snackbar(content: Text('${plane.name} applied')));
+    ).showSnackBar(SnackBar(content: Text('${plane.name} applied')));
   }
 
   void _deletePlane(int index) {
@@ -344,6 +346,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   ref.read(planesProvider.notifier).removePlane(draft.id);
                   setState(() {
                     _planeDrafts.removeAt(index);
+                    planeDrafts = _planeDrafts;
                     _planeCount = _planeDrafts.length;
                   });
                   Navigator.pop(ctx);
@@ -364,6 +367,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             name: 'Plane ${_planeDrafts.length + 1}',
           ),
         );
+        planeDrafts = _planeDrafts;
         _planeCount = _planeDrafts.length;
       }
     });

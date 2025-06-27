@@ -29,21 +29,21 @@ class PlanePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final planes = ref.watch(planesProvider);
-    final selectedId =ref.watch(selectedPlaneIdProvider);
+    final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
     final sequence = planeState.selectedSequence;
 
-    Plane? selectedplane;
+    Plane? selectedPlane;
     if (selectedId != null) {
       try {
-        selectedplane = planes.firstWhere((p) => p.id == selectedId);
+        selectedPlane = planes.firstWhere((p) => p.id == selectedId);
       } catch (_) {}
     }
     if (selectedPlane == null && planes.isNotEmpty) {
-      selectedplane = planes.first;
-      ref.read(selectedPlaneIdProvider.notifier).state = selectedplane.id;
-      ref.read(planeProvider.notifier).loadPlane(selectedplane);
+      selectedPlane = planes.first;
+      ref.read(selectedPlaneIdProvider.notifier).state = selectedPlane.id;
+      ref.read(planeProvider.notifier).loadPlane(selectedPlane);
     }
 
     return Scaffold(
@@ -54,24 +54,30 @@ class PlanePage extends ConsumerWidget {
         actions: [
           if (planes.isNotEmpty)
             DropdownButton<String>(
-              value: selectedplane?.id,
+              value: selectedPlane?.id,
               underline: const SizedBox.shrink(),
               dropdownColor: Colors.black,
-              items: planes
-                  .map(
-                    (p) => DropdownMenuItem<String>(
-                      value: p.id,
-                      child: Text(p.name, style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    .toList(),
+              items:
+                  planes
+                      .map(
+                        (p) => DropdownMenuItem(
+                          value: p.id,
+                          child: Text(
+                            p.name,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
               onChanged: (val) {
                 if (val == null) return;
                 ref.read(selectedPlaneIdProvider.notifier).state = val;
                 final plane = planes.firstWhere((p) => p.id == val);
                 ref.read(planeProvider.notifier).loadPlane(plane);
-                final aircraft = 
-                    aircraftList.firstWhere((a) => a.typeCode == plane.aircraftType);
+                final aircraft = aircraftList.firstWhere(
+                  (a) => a.typeCode == plane.aircraftTypeCode,
+                  orElse: () => aircraftList.first,
+                );
                 ref.read(aircraftProvider.notifier).state = aircraft;
               },
             ),
@@ -213,14 +219,15 @@ class PlanePage extends ConsumerWidget {
     final container = ref.watch(planeProvider).slots[index];
 
     final planeId = ref.watch(selectedPlaneIdProvider);
-    
+
     return DragTarget<model.StorageContainer>(
       onAccept: (c) {
         ref.read(planeProvider.notifier).placeContainer(index, c);
         if (planeId != null) {
-          fnal planes = ref.read(planesProvider);
-          try { 
+          final planes = ref.read(planesProvider);
+          try {
             final plane = planes.firstWhere((p) => p.id == planeId);
+            final updated = ref.read(planeProvider.notifier).exportPlane(plane);
             ref.read(planesProvider.notifier).updatePlane(updated);
           } catch (_) {}
         }
