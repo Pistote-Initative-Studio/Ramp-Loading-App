@@ -63,7 +63,7 @@ class PlanePage extends ConsumerWidget {
       final intialAircraft =
           aircraft ??
           aircraftList.firstWhere(
-            (a) => a.typeCode == selectedPlane.aircraftTypeCode,
+            (a) => a.typeCode == selectedPlane?.aircraftTypeCode,
             orElse: () => aircraftList.first,
           );
       ref.read(aircraftProvider.notifier).state = intialAircraft;
