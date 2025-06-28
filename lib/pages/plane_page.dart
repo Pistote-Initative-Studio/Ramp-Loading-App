@@ -8,6 +8,7 @@ import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
 import '../providers/planes_provider.dart';
+import '../providers/lower_deck_provider.dart';
 import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
@@ -23,6 +24,8 @@ final List<Aircraft> aircraftList = [
   Aircraft('B763', 'Boeing 767-300 Freighter', [], []),
   Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
 ];
+
+final lowerDeckviewProvider = StateProvider<bool>((ref) => false);
 
 class PlanePage extends ConsumerWidget {
   const PlanePage({super.key});
@@ -41,6 +44,7 @@ class PlanePage extends ConsumerWidget {
     final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
+    final isLowerDeck = ref.watch(lowerDeckviewProvider);
     final configs = planeState.configs;
     final sequence = planeState.selectedSequence;
 
@@ -81,6 +85,16 @@ class PlanePage extends ConsumerWidget {
           if (planes.isNotEmpty)
             Row(
               children: [
+                IconButton(
+                  icon: Icon(
+                    isLowerDeck ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    ref.read(lowerDeckviewProvider.notifier).state =
+                        !isLowerDeck;
+                  },
+                ),
                 DropdownButton<String>(
                   value: selectedPlane?.id,
                   underline: const SizedBox.shrink(),
@@ -158,7 +172,10 @@ class PlanePage extends ConsumerWidget {
               )
               : SingleChildScrollView(
                 padding: slotPadding,
-                child: _buildLayout(ref, sequence),
+                child:
+                    isLowerDeck
+                        ? _buildLowerDeckLayout(ref)
+                        : _buildLayout(ref, sequence),
               ),
     );
   }
@@ -277,6 +294,79 @@ class PlanePage extends ConsumerWidget {
         const SizedBox(height: 20),
         _buildSlot(ref, 18, 'A10'),
       ],
+    );
+  }
+
+  Widget _buildLowerDeckLayout(WidgetRef ref) {
+    final slots = ref.watch(lowerDeckProvider);
+    const labels = [
+      '1AC',
+      '1BC',
+      '1CC',
+      '2DC',
+      '2EC',
+      '2FC',
+      '3AC',
+      '3BC',
+      '3CC',
+      '4DC',
+      '4EC',
+    ];
+
+    final children = <Widget>[];
+    for (int i = 0; i < slots.length; i++) {
+      if (i == 6) {
+        children.add(const SizedBox(height: 116)); // Spacing between sections
+      }
+      children.add(
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
+          ),
+          child: _buildLowerDeckSlot(ref, i, labels[i]),
+        ),
+      );
+    }
+    return Column(children: children);
+  }
+
+  Widget _buildLowerDeckSlot(WidgetRef ref, int index, String label) {
+    final container = ref.watch(lowerDeckProvider)[index];
+
+    return DragTarget<model.StorageContainer>(
+      onAccept: (c) {
+        ref.read(lowerDeckProvider.notifier).placeContainer(index, c);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isActive = candidateData.isNotEmpty;
+        return DottedBorder(
+          color: isActive ? Colors.yellow : Colors.white,
+          strokeWidth: 2,
+          dashPattern: container == null ? [4, 4] : [1, 0],
+          borderType: BorderType.RRect,
+          radius: const Radius.circular(8),
+          child: Container(
+            width: 100, // Same as Ball Deck
+            height: 100, // Same as Ball Deck
+            alignment: Alignment.center,
+            child:
+                container == null
+                    ? Text(label, style: const TextStyle(color: Colors.white70))
+                    : LongPressDraggable<model.StorageContainer>(
+                      data: container,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: UldChip(container),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: 0.2,
+                        child: UldChip(container),
+                      ),
+                      child: UldChip(container),
+                    ),
+          ),
+        );
+      },
     );
   }
 
