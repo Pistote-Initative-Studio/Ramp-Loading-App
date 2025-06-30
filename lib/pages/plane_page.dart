@@ -7,7 +7,7 @@ import '../models/container.dart' as model;
 import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart'
-    show planeProvider, outboundViewProvider;
+    show planeProvider, isOutboundProvider;
 import '../providers/planes_provider.dart';
 import '../providers/lower_deck_provider.dart';
 import '../models/plane.dart';
@@ -45,7 +45,7 @@ class PlanePage extends ConsumerWidget {
     final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
-    final isOutbound = ref.watch(outboundViewProvider);
+    final isOutbound = ref.watch(isOutboundProvider);
     final isLowerDeck = ref.watch(lowerDeckviewProvider);
     final configs = planeState.configs;
     final sequence =
@@ -174,7 +174,7 @@ class PlanePage extends ConsumerWidget {
                     Switch(
                       value: isOutbound,
                       onChanged: (val) {
-                        ref.read(outboundViewProvider.notifier).state = val;
+                        ref.read(isOutboundProvider.notifier).state = val;
                       },
                     ),
                     const Text(
