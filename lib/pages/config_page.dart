@@ -135,7 +135,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               );
               LoadingSequence? cfg;
               try {
-                cfg = ac.configs.firstWhere((c) => c.label == p.sequenceLabel);
+                cfg = ac.configs.firstWhere(
+                  (c) => c.label == p.inboundSequenceLabel,
+                );
               } catch (_) {}
               return _PlaneDraft(
                 id: p.id,
@@ -300,9 +302,14 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       id: draft.id,
       name: draft.nameController.text,
       aircraftTypeCode: ac.typeCode,
-      sequenceLabel: cfg.label,
-      sequenceOrder: cfg.order,
-      slots: List.filled(cfg.order.length, null),
+      inboundSequenceLabel: cfg.label,
+      inboundSequenceOrder: cfg.order,
+      inboundSlots: List.filled(cfg.order.length, null),
+      outboundSequenceLabel: cfg.label,
+      outboundSequenceOrder: cfg.order,
+      outboundSlots: List.filled(cfg.order.length, null),
+      lowerInboundSlots: List.filled(11, null),
+      lowerOutboundSlots: List.filled(11, null),
     );
     final existing = ref.read(planesProvider).any((p) => p.id == plane.id);
     if (existing) {

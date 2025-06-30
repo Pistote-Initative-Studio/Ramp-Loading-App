@@ -6,7 +6,8 @@ import 'package:hive/hive.dart';
 import '../models/container.dart' as model;
 import '../models/aircraft.dart';
 import '../providers/aircraft_provider.dart';
-import '../providers/plane_provider.dart';
+import '../providers/plane_provider.dart'
+    show planeProvider, outboundViewProvider;
 import '../providers/planes_provider.dart';
 import '../providers/lower_deck_provider.dart';
 import '../models/plane.dart';
@@ -44,9 +45,11 @@ class PlanePage extends ConsumerWidget {
     final selectedId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final planeState = ref.watch(planeProvider);
+    final isOutbound = ref.watch(outboundViewProvider);
     final isLowerDeck = ref.watch(lowerDeckviewProvider);
     final configs = planeState.configs;
-    final sequence = planeState.selectedSequence;
+    final sequence =
+        isOutbound ? planeState.outboundSequence : planeState.inboundSequence;
 
     LoadingSequence? selectedConfig;
     if (sequence != null) {
@@ -74,6 +77,7 @@ class PlanePage extends ConsumerWidget {
       ref
           .read(planeProvider.notifier)
           .loadPlane(selectedPlane, intialAircraft.configs);
+      ref.read(lowerDeckProvider.notifier).loadFromPlane(selectedPlane);
     }
 
     return Scaffold(
@@ -122,6 +126,7 @@ class PlanePage extends ConsumerWidget {
                     ref
                         .read(planeProvider.notifier)
                         .loadPlane(plane, aircraft.configs);
+                    ref.read(lowerDeckProvider.notifier).loadFromPlane(plane);
                     ref.read(aircraftProvider.notifier).state = aircraft;
                   },
                 ),
@@ -145,7 +150,9 @@ class PlanePage extends ConsumerWidget {
                             .toList(),
                     onChanged: (cfg) {
                       if (cfg == null) return;
-                      ref.read(planeProvider.notifier).selectSequence(cfg);
+                      ref
+                          .read(planeProvider.notifier)
+                          .selectSequence(cfg, outbound: isOutbound);
                       final pid = selectedPlane?.id;
                       if (pid != null) {
                         final plane = planes.firstWhere((p) => p.id == pid);
@@ -157,6 +164,25 @@ class PlanePage extends ConsumerWidget {
                     },
                   ),
                 ],
+                const SizedBox(width: 12),
+                Row(
+                  children: [
+                    const Text(
+                      'Inbound',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Switch(
+                      value: isOutbound,
+                      onChanged: (val) {
+                        ref.read(outboundViewProvider.notifier).state = val;
+                      },
+                    ),
+                    const Text(
+                      'Outbound',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ],
             ),
         ],
@@ -174,8 +200,8 @@ class PlanePage extends ConsumerWidget {
                 padding: slotPadding,
                 child:
                     isLowerDeck
-                        ? _buildLowerDeckLayout(ref)
-                        : _buildLayout(ref, sequence),
+                        ? _buildLowerDeckLayout(ref, isOutbound)
+                        : _buildLayout(ref, sequence, isOutbound),
               ),
     );
   }
@@ -194,8 +220,9 @@ class PlanePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLayout(WidgetRef ref, LoadingSequence sequence) {
-    final slots = ref.watch(planeProvider).slots;
+  Widget _buildLayout(WidgetRef ref, LoadingSequence sequence, bool outbound) {
+    final plane = ref.watch(planeProvider);
+    final slots = outbound ? plane.outboundSlots : plane.inboundSlots;
     final columns = _columnCount(sequence);
 
     if (columns == 2) {
@@ -218,7 +245,12 @@ class PlanePage extends ConsumerWidget {
                                 ? 0
                                 : slotRunSpacing,
                       ),
-                      child: _buildSlot(ref, index, _slotLabel(index)),
+                      child: _buildSlot(
+                        ref,
+                        index,
+                        _slotLabel(index),
+                        outbound,
+                      ),
                     );
                   }),
                 ),
@@ -235,7 +267,12 @@ class PlanePage extends ConsumerWidget {
                                 ? 0
                                 : slotRunSpacing,
                       ),
-                      child: _buildSlot(ref, index, _slotLabel(index)),
+                      child: _buildSlot(
+                        ref,
+                        index,
+                        _slotLabel(index),
+                        outbound,
+                      ),
                     );
                   }),
                 ),
@@ -244,7 +281,7 @@ class PlanePage extends ConsumerWidget {
           ),
           if (remainder == 1) ...[
             SizedBox(height: slotRunSpacing),
-            _buildSlot(ref, pairCount * 2, _slotLabel(pairCount * 2)),
+            _buildSlot(ref, pairCount * 2, _slotLabel(pairCount * 2), outbound),
           ],
         ],
       );
@@ -256,7 +293,7 @@ class PlanePage extends ConsumerWidget {
             padding: EdgeInsets.only(
               bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
             ),
-            child: _buildSlot(ref, i, _slotLabel(i)),
+            child: _buildSlot(ref, i, _slotLabel(i), outbound),
           );
         }),
       );
@@ -273,7 +310,7 @@ class PlanePage extends ConsumerWidget {
                 children: List.generate(9, (i) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(ref, i * 2, '${i + 1}L'),
+                    child: _buildSlot(ref, i * 2, '${i + 1}L', outbound),
                   );
                 }),
               ),
@@ -284,7 +321,7 @@ class PlanePage extends ConsumerWidget {
                 children: List.generate(9, (i) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(ref, i * 2 + 1, '${i + 1}R'),
+                    child: _buildSlot(ref, i * 2 + 1, '${i + 1}R', outbound),
                   );
                 }),
               ),
@@ -292,13 +329,14 @@ class PlanePage extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _buildSlot(ref, 18, 'A10'),
+        _buildSlot(ref, 18, 'A10', outbound),
       ],
     );
   }
 
-  Widget _buildLowerDeckLayout(WidgetRef ref) {
-    final slots = ref.watch(lowerDeckProvider);
+  Widget _buildLowerDeckLayout(WidgetRef ref, bool outbound) {
+    final deck = ref.watch(lowerDeckProvider);
+    final slots = outbound ? deck.outboundSlots : deck.inboundSlots;
     const labels = [
       '1AC',
       '1BC',
@@ -323,19 +361,40 @@ class PlanePage extends ConsumerWidget {
           padding: EdgeInsets.only(
             bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
           ),
-          child: _buildLowerDeckSlot(ref, i, labels[i]),
+          child: _buildLowerDeckSlot(ref, i, labels[i], outbound),
         ),
       );
     }
     return Column(children: children);
   }
 
-  Widget _buildLowerDeckSlot(WidgetRef ref, int index, String label) {
-    final container = ref.watch(lowerDeckProvider)[index];
+  Widget _buildLowerDeckSlot(
+    WidgetRef ref,
+    int index,
+    String label,
+    bool outbound,
+  ) {
+    final deck = ref.watch(lowerDeckProvider);
+    final container =
+        outbound ? deck.outboundSlots[index] : deck.inboundSlots[index];
 
     return DragTarget<model.StorageContainer>(
       onAccept: (c) {
-        ref.read(lowerDeckProvider.notifier).placeContainer(index, c);
+        ref
+            .read(lowerDeckProvider.notifier)
+            .placeContainer(index, c, outbound: outbound);
+        ref
+            .read(planeProvider.notifier)
+            .placeLowerDeckContainer(index, c, outbound: outbound);
+        final planeId = ref.watch(selectedPlaneIdProvider);
+        if (planeId != null) {
+          final planes = ref.read(planesProvider);
+          try {
+            final plane = planes.firstWhere((p) => p.id == planeId);
+            final updated = ref.read(planeProvider.notifier).exportPlane(plane);
+            ref.read(planesProvider.notifier).updatePlane(updated);
+          } catch (_) {}
+        }
       },
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
@@ -384,14 +443,20 @@ class PlanePage extends ConsumerWidget {
     return '$row$side';
   }
 
-  Widget _buildSlot(WidgetRef ref, int index, String label) {
-    final container = ref.watch(planeProvider).slots[index];
+  Widget _buildSlot(WidgetRef ref, int index, String label, bool outbound) {
+    final planeState = ref.watch(planeProvider);
+    final container =
+        outbound
+            ? planeState.outboundSlots[index]
+            : planeState.inboundSlots[index];
 
     final planeId = ref.watch(selectedPlaneIdProvider);
 
     return DragTarget<model.StorageContainer>(
       onAccept: (c) {
-        ref.read(planeProvider.notifier).placeContainer(index, c);
+        ref
+            .read(planeProvider.notifier)
+            .placeContainer(index, c, outbound: outbound);
         if (planeId != null) {
           final planes = ref.read(planesProvider);
           try {

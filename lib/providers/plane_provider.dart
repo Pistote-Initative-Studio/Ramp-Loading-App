@@ -4,82 +4,192 @@ import '../models/aircraft.dart';
 import '../models/plane.dart';
 
 class PlaneState {
-  final LoadingSequence? selectedSequence;
+  final LoadingSequence? inboundSequence;
+  final LoadingSequence? outboundSequence;
   final List<LoadingSequence> configs;
-  final List<StorageContainer?> slots;
+  final List<StorageContainer?> inboundSlots;
+  final List<StorageContainer?> outboundSlots;
+  final List<StorageContainer?> lowerInboundSlots;
+  final List<StorageContainer?> lowerOutboundSlots;
 
   PlaneState({
-    required this.selectedSequence,
+    required this.inboundSequence,
+    required this.outboundSequence,
     required this.configs,
-    required this.slots,
+    required this.inboundSlots,
+    required this.outboundSlots,
+    required this.lowerInboundSlots,
+    required this.lowerOutboundSlots,
   });
 
   PlaneState copyWith({
-    LoadingSequence? selectedSequence,
+    LoadingSequence? inboundSequence,
+    LoadingSequence? outboundSequence,
     List<LoadingSequence>? configs,
-    List<StorageContainer?>? slots,
+    List<StorageContainer?>? inboundSlots,
+    List<StorageContainer?>? outboundSlots,
+    List<StorageContainer?>? lowerInboundSlots,
+    List<StorageContainer?>? lowerOutboundSlots,
   }) {
     return PlaneState(
-      selectedSequence: selectedSequence ?? this.selectedSequence,
+      inboundSequence: inboundSequence ?? this.inboundSequence,
+      outboundSequence: outboundSequence ?? this.outboundSequence,
       configs: configs ?? this.configs,
-      slots: slots ?? this.slots,
+      inboundSlots: inboundSlots ?? this.inboundSlots,
+      outboundSlots: outboundSlots ?? this.outboundSlots,
+      lowerInboundSlots: lowerInboundSlots ?? this.lowerInboundSlots,
+      lowerOutboundSlots: lowerOutboundSlots ?? this.lowerOutboundSlots,
     );
   }
 }
 
 class PlaneNotifier extends StateNotifier<PlaneState> {
   PlaneNotifier()
-    : super(PlaneState(selectedSequence: null, configs: const [], slots: []));
+    : super(
+        PlaneState(
+          inboundSequence: null,
+          outboundSequence: null,
+          configs: const [],
+          inboundSlots: const [],
+          outboundSlots: const [],
+          lowerInboundSlots: const [],
+          lowerOutboundSlots: const [],
+        ),
+      );
 
   void loadPlane(Plane plane, [List<LoadingSequence> configs = const []]) {
-    final sequence = LoadingSequence(
-      plane.sequenceLabel,
-      plane.sequenceLabel,
-      plane.sequenceOrder,
+    final inboundSequence = LoadingSequence(
+      plane.inboundSequenceLabel,
+      plane.inboundSequenceLabel,
+      plane.inboundSequenceOrder,
+    );
+    final outboundSequence = LoadingSequence(
+      plane.outboundSequenceLabel,
+      plane.outboundSequenceLabel,
+      plane.outboundSequenceOrder,
     );
     state = PlaneState(
-      selectedSequence: sequence,
+      inboundSequence: inboundSequence,
+      outboundSequence: outboundSequence,
       configs: configs,
-      slots: List.from(plane.slots),
+      inboundSlots: List.from(plane.inboundSlots),
+      outboundSlots: List.from(plane.outboundSlots),
+      lowerInboundSlots: List.from(plane.lowerInboundSlots),
+      lowerOutboundSlots: List.from(plane.lowerOutboundSlots),
     );
   }
 
-  Plane exportPlane(Plane origional) {
+  Plane exportPlane(Plane original) {
     return Plane(
-      id: origional.id,
-      name: origional.name,
-      aircraftTypeCode: origional.aircraftTypeCode,
-      sequenceLabel: state.selectedSequence?.label ?? origional.sequenceLabel,
-      sequenceOrder: state.selectedSequence?.order ?? origional.sequenceOrder,
-      slots: List.from(state.slots),
+      id: original.id,
+      name: original.name,
+      aircraftTypeCode: original.aircraftTypeCode,
+      inboundSequenceLabel:
+          state.inboundSequence?.label ?? original.inboundSequenceLabel,
+      inboundSequenceOrder:
+          state.inboundSequence?.order ?? original.inboundSequenceOrder,
+      inboundSlots: List.from(state.inboundSlots),
+      outboundSequenceLabel:
+          state.outboundSequence?.label ?? original.outboundSequenceLabel,
+      outboundSequenceOrder:
+          state.outboundSequence?.order ?? original.outboundSequenceOrder,
+      outboundSlots: List.from(state.outboundSlots),
+      lowerInboundSlots: List.from(state.lowerInboundSlots),
+      lowerOutboundSlots: List.from(state.lowerOutboundSlots),
     );
   }
 
-  void selectSequence(LoadingSequence sequence) {
+  void selectSequence(LoadingSequence sequence, {required bool outbound}) {
     final newSlots = List<StorageContainer?>.filled(
       sequence.order.length,
       null,
     );
     Future.microtask(() {
-      state = state.copyWith(selectedSequence: sequence, slots: newSlots);
+      if (outbound) {
+        state = state.copyWith(
+          outboundSequence: sequence,
+          outboundSlots: newSlots,
+        );
+      } else {
+        state = state.copyWith(
+          inboundSequence: sequence,
+          inboundSlots: newSlots,
+        );
+      }
     });
   }
 
-  void placeContainer(int index, StorageContainer container) {
-    final updatedSlots = [...state.slots];
-    updatedSlots[index] = container;
-    state = state.copyWith(slots: updatedSlots);
+  void placeContainer(
+    int index,
+    StorageContainer container, {
+    required bool outbound,
+  }) {
+    if (outbound) {
+      final updatedSlots = [...state.outboundSlots];
+      updatedSlots[index] = container;
+      state = state.copyWith(outboundSlots: updatedSlots);
+    } else {
+      final updatedSlots = [...state.inboundSlots];
+      updatedSlots[index] = container;
+      state = state.copyWith(inboundSlots: updatedSlots);
+    }
   }
 
-  void removeContainer(StorageContainer container) {
-    final updatedSlots = [
-      for (final slot in state.slots)
-        if (slot?.id == container.id) null else slot,
-    ];
-    state = state.copyWith(slots: updatedSlots);
+  void removeContainer(StorageContainer container, {required bool outbound}) {
+    if (outbound) {
+      final updatedSlots = [
+        for (final slot in state.outboundSlots)
+          if (slot?.id == container.id) null else slot,
+      ];
+      state = state.copyWith(outboundSlots: updatedSlots);
+    } else {
+      final updatedSlots = [
+        for (final slot in state.inboundSlots)
+          if (slot?.id == container.id) null else slot,
+      ];
+      state = state.copyWith(inboundSlots: updatedSlots);
+    }
+  }
+
+  void placeLowerDeckContainer(
+    int index,
+    StorageContainer container, {
+    required bool outbound,
+  }) {
+    if (outbound) {
+      final updated = [...state.lowerOutboundSlots];
+      updated[index] = container;
+      state = state.copyWith(lowerOutboundSlots: updated);
+    } else {
+      final updated = [...state.lowerInboundSlots];
+      updated[index] = container;
+      state = state.copyWith(lowerInboundSlots: updated);
+    }
+  }
+
+  void removeLowerDeckContainer(
+    StorageContainer container, {
+    required bool outbound,
+  }) {
+    if (outbound) {
+      final updated = [
+        for (final slot in state.lowerOutboundSlots)
+          if (slot?.id == container.id) null else slot,
+      ];
+      state = state.copyWith(lowerOutboundSlots: updated);
+    } else {
+      final updated = [
+        for (final slot in state.lowerInboundSlots)
+          if (slot?.id == container.id) null else slot,
+      ];
+      state = state.copyWith(lowerInboundSlots: updated);
+    }
   }
 }
 
 final planeProvider = StateNotifierProvider<PlaneNotifier, PlaneState>(
   (ref) => PlaneNotifier(),
 );
+
+/// Traacks wether the Plane page is showing the outbound view.
+final isOutboundProvider = StateProvider<bool>((ref) => false);
