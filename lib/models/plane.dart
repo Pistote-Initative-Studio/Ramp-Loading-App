@@ -16,10 +16,10 @@ class Plane extends HiveObject {
 
   // Inbound main deck configuration
   @HiveField(3)
-  String InboundSequenceLabel;
+  String inboundSequenceLabel;
 
   @HiveField(4)
-  List<int> InboundSequenceOrder;
+  List<int> inboundSequenceOrder;
 
   @HiveField(5)
   List<StorageContainer?> inboundSlots;

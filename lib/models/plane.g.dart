@@ -20,16 +20,21 @@ class PlaneAdapter extends TypeAdapter<Plane> {
       id: fields[0] as String,
       name: fields[1] as String,
       aircraftTypeCode: fields[2] as String,
-      sequenceLabel: fields[3] as String,
-      sequenceOrder: (fields[4] as List).cast<int>(),
-      slots: (fields[5] as List).cast<StorageContainer?>(),
+      inboundSequenceLabel: fields[3] as String,
+      inboundSequenceOrder: (fields[4] as List).cast<int>(),
+      inboundSlots: (fields[5] as List).cast<StorageContainer?>(),
+      outboundSequenceLabel: fields[6] as String,
+      outboundSequenceOrder: (fields[7] as List).cast<int>(),
+      outboundSlots: (fields[8] as List).cast<StorageContainer?>(),
+      lowerInboundSlots: (fields[9] as List).cast<StorageContainer?>(),
+      lowerOutboundSlots: (fields[10] as List).cast<StorageContainer?>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Plane obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -37,11 +42,21 @@ class PlaneAdapter extends TypeAdapter<Plane> {
       ..writeByte(2)
       ..write(obj.aircraftTypeCode)
       ..writeByte(3)
-      ..write(obj.sequenceLabel)
+      ..write(obj.inboundSequenceLabel)
       ..writeByte(4)
-      ..write(obj.sequenceOrder)
+      ..write(obj.inboundSequenceOrder)
       ..writeByte(5)
-      ..write(obj.slots);
+      ..write(obj.inboundSlots)
+      ..writeByte(6)
+      ..write(obj.outboundSequenceLabel)
+      ..writeByte(7)
+      ..write(obj.outboundSequenceOrder)
+      ..writeByte(8)
+      ..write(obj.outboundSlots)
+      ..writeByte(9)
+      ..write(obj.lowerInboundSlots)
+      ..writeByte(10)
+      ..write(obj.lowerOutboundSlots);
   }
 
   @override
