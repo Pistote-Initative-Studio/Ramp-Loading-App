@@ -136,7 +136,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               LoadingSequence? cfg;
               try {
                 cfg = ac.configs.firstWhere(
-                  (c) => c.label == p.inboundSequenceLabel,
+                  (c) => c.label == (p.inboundSequenceLabel ?? ''),
                 );
               } catch (_) {}
               return _PlaneDraft(

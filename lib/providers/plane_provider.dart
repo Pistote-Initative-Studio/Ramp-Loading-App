@@ -59,8 +59,8 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
 
   void loadPlane(Plane plane, [List<LoadingSequence> configs = const []]) {
     final inboundSequence = LoadingSequence(
-      plane.inboundSequenceLabel,
-      plane.inboundSequenceLabel,
+      plane.inboundSequenceLabel ?? '',
+      plane.inboundSequenceLabel ?? '',
       plane.inboundSequenceOrder,
     );
     final outboundSequence = LoadingSequence(
@@ -191,5 +191,5 @@ final planeProvider = StateNotifierProvider<PlaneNotifier, PlaneState>(
   (ref) => PlaneNotifier(),
 );
 
-/// Traacks wether the Plane page is showing the outbound view.
+/// Tracks wether the Plane page is showing the outbound view.
 final isOutboundProvider = StateProvider<bool>((ref) => false);
