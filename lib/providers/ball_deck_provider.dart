@@ -121,6 +121,32 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     _saveState();
   }
 
+  // Remove a ULD from anywhere on the ball deck or overflow by id
+  void removeContainer(StorageContainer container) {
+    final newSlots = [
+      for (final slot in state.slots)
+        if (slot?.id == container.id) null else slot
+    ];
+
+    final newOverflow = [
+      for (int i = 0; i < state.overflow.length; i++)
+        state.overflow[i].id == container.id
+            ? StorageContainer(
+                id: 'EMPTY_SLOT_$i',
+                uld: 'EMPTY_SLOT_$i',
+                type: SizeEnum.EMPTY,
+                size: SizeEnum.PAG_88x125,
+                weightKg: 0,
+                hasDangerousGoods: false,
+                colorIndex: null,
+              )
+            : state.overflow[i]
+    ];
+
+    state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    _saveState();
+  }
+
   void _saveState() {
     // You can implement Hive or other persistence logic here
   }
