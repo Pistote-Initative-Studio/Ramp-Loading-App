@@ -5,6 +5,7 @@ import '../providers/aircraft_provider.dart';
 import '../providers/plane_provider.dart';
 import '../providers/planes_provider.dart';
 import '../models/plane.dart';
+import 'plane_page.dart' show lowerDeckviewProvider;
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../providers/ball_deck_provider.dart';
@@ -182,8 +183,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     String destination = 'Ball Deck';
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
             backgroundColor: Colors.grey[900],
             title: Text(
               'Add $type ULD',
@@ -217,7 +219,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                           )
                           .toList(),
                   onChanged: (val) {
-                    if (val != null) destination = val;
+                    if (val != null) {
+                      setState(() => destination = val);
+                    }
                   },
                 ),
               ],
@@ -242,6 +246,31 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     case 'Ball Deck':
                       ref.read(ballDeckProvider.notifier).addUld(container);
                       break;
+                    case 'Train':
+                      ref
+                          .read(trainProvider.notifier)
+                          .addToFirstAvailable(container);
+                      break;
+                    case 'Plane':
+                      final outbound = ref.read(isOutboundProvider);
+                      final lower = ref.read(lowerDeckviewProvider);
+                      ref.read(planeProvider.notifier).addToFirstAvailable(
+                            container,
+                            outbound: outbound,
+                            lowerDeck: lower,
+                          );
+                      final pid = ref.read(selectedPlaneIdProvider);
+                      if (pid != null) {
+                        final planes = ref.read(planesProvider);
+                        try {
+                          final plane = planes.firstWhere((p) => p.id == pid);
+                          final updated = ref
+                              .read(planeProvider.notifier)
+                              .exportPlane(plane);
+                          ref.read(planesProvider.notifier).updatePlane(updated);
+                        } catch (_) {}
+                      }
+                      break;
                     case 'Storage':
                       ref.read(storageProvider.notifier).addUld(container);
                       break;
@@ -257,6 +286,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               ),
             ],
           ),
+        );
+      },
     );
   }
 
