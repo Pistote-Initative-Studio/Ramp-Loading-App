@@ -11,6 +11,7 @@ import 'pages/ball_deck_page.dart';
 import 'pages/plane_page.dart';
 import 'pages/config_page.dart';
 import 'pages/storage_page.dart';
+import 'widgets/transfer_area.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,30 +95,36 @@ class _HomeNavState extends State<HomeNav> {
           StoragePage(), // index 4
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.white, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.black,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.white70,
-          currentIndex: page,
-          onTap: jumpToPage,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Config',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const TransferArea(),
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.white, width: 1)),
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.grid_on), label: 'Deck'),
-            BottomNavigationBarItem(icon: Icon(Icons.train), label: 'Trains'),
-            BottomNavigationBarItem(icon: Icon(Icons.flight), label: 'Plane'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.warehouse),
-              label: 'Storage',
+            child: BottomNavigationBar(
+              backgroundColor: Colors.black,
+              selectedItemColor: Colors.white,
+              unselectedItemColor: Colors.white70,
+              currentIndex: page,
+              onTap: jumpToPage,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.settings),
+                  label: 'Config',
+                ),
+                BottomNavigationBarItem(icon: Icon(Icons.grid_on), label: 'Deck'),
+                BottomNavigationBarItem(icon: Icon(Icons.train), label: 'Trains'),
+                BottomNavigationBarItem(icon: Icon(Icons.flight), label: 'Plane'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.warehouse),
+                  label: 'Storage',
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
