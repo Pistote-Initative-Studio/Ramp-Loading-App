@@ -14,6 +14,7 @@ import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../utils/uld_mover.dart';
 
 final List<Aircraft> aircraftList = [
   Aircraft('B762', 'Boeinf 767-200 Freighter', [], [
@@ -449,12 +450,13 @@ class PlanePage extends ConsumerWidget {
           : null,
       child: DragTarget<model.StorageContainer>(
         onAccept: (c) {
+          removeFromAll(ref, c);
           ref
               .read(lowerDeckProvider.notifier)
               .placeContainer(index, c, outbound: outbound);
-        ref
-            .read(planeProvider.notifier)
-            .placeLowerDeckContainer(index, c, outbound: outbound);
+          ref
+              .read(planeProvider.notifier)
+              .placeLowerDeckContainer(index, c, outbound: outbound);
         final planeId = ref.watch(selectedPlaneIdProvider);
         if (planeId != null) {
           final planes = ref.read(planesProvider);
@@ -553,6 +555,7 @@ class PlanePage extends ConsumerWidget {
           : null,
       child: DragTarget<model.StorageContainer>(
         onAccept: (c) {
+          removeFromAll(ref, c);
           ref
               .read(planeProvider.notifier)
               .placeContainer(index, c, outbound: outbound);

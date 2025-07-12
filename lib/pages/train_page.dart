@@ -9,6 +9,7 @@ import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/color_palette.dart';
 import '../widgets/transfer_menu.dart';
+import '../utils/uld_mover.dart';
 
 class TrainPage extends ConsumerWidget {
   const TrainPage({super.key});
@@ -100,6 +101,7 @@ class TrainPage extends ConsumerWidget {
                 : null,
             child: DragTarget<model.StorageContainer>(
               onAccept: (c) {
+                removeFromAll(ref, c);
                 ref
                     .read(trainProvider.notifier)
                     .assignUldToDolly(
