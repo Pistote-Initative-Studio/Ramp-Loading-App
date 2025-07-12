@@ -35,4 +35,13 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
     newState.add(container); // Overflow behavior (expand list)
     state = newState;
   }
+
+  // Remove a ULD from storage by id
+  void removeContainer(StorageContainer container) {
+    final newState = [
+      for (final slot in state)
+        if (slot?.id == container.id) null else slot
+    ];
+    state = newState;
+  }
 }

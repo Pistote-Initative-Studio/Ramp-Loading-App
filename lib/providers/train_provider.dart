@@ -88,4 +88,23 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     state = trains;
     _saveState();
   }
+
+  // Remove a ULD from any train dolly by id
+  void removeContainer(StorageContainer container) {
+    final trains = [...state];
+    bool changed = false;
+    for (int t = 0; t < trains.length; t++) {
+      final train = trains[t];
+      for (int i = 0; i < train.dollys.length; i++) {
+        if (train.dollys[i].load?.id == container.id) {
+          train.dollys[i] = Dolly(train.dollys[i].idx); // clear
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      state = trains;
+      _saveState();
+    }
+  }
 }

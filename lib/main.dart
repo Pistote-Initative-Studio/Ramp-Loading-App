@@ -98,7 +98,7 @@ class _HomeNavState extends State<HomeNav> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const TransferArea(),
+          if (page != 0) const TransferArea(),
           Container(
             decoration: const BoxDecoration(
               border: Border(top: BorderSide(color: Colors.white, width: 1)),
