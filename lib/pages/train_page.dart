@@ -8,6 +8,7 @@ import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/color_palette.dart';
+import '../widgets/transfer_menu.dart';
 
 class TrainPage extends ConsumerWidget {
   const TrainPage({super.key});
@@ -38,7 +39,7 @@ class TrainPage extends ConsumerWidget {
                   children: [
                     _buildTug(tug),
                     const SizedBox(height: 24),
-                    _buildDollyStack(ref, train),
+                    _buildDollyStack(context, ref, train),
                   ],
                 ),
               );
@@ -73,7 +74,7 @@ class TrainPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDollyStack(WidgetRef ref, Train train) {
+  Widget _buildDollyStack(BuildContext context, WidgetRef ref, Train train) {
     return SizedBox(
       width: 100,
       height: 400,
@@ -82,34 +83,48 @@ class TrainPage extends ConsumerWidget {
         itemBuilder: (context, index) {
           final dolly = train.dollys[index];
           final uld = dolly.load;
-          return DragTarget<model.StorageContainer>(
-            onAccept: (c) {
-              ref
-                  .read(trainProvider.notifier)
-                  .assignUldToDolly(
-                    trainId: train.id,
-                    dollyIdx: index,
-                    container: c,
-                  );
-            },
-            builder: (context, candidateData, rejectedData) {
-              final isActive = candidateData.isNotEmpty;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: DottedBorder(
-                  color: isActive ? Colors.yellow : Colors.white,
-                  strokeWidth: 2,
-                  dashPattern: uld == null ? const [4, 4] : const [1, 0],
-                  borderType: BorderType.RRect,
-                  radius: const Radius.circular(8),
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    alignment: Alignment.center,
-                    child:
-                        uld == null
-                            ? const SizedBox()
-                            : LongPressDraggable<model.StorageContainer>(
+          return GestureDetector(
+            onLongPressStart: uld == null
+                ? (details) => showTransferMenu(
+                      context: context,
+                      ref: ref,
+                      position: details.globalPosition,
+                      onSelected: (c) {
+                        ref.read(trainProvider.notifier).assignUldToDolly(
+                              trainId: train.id,
+                              dollyIdx: index,
+                              container: c,
+                            );
+                      },
+                    )
+                : null,
+            child: DragTarget<model.StorageContainer>(
+              onAccept: (c) {
+                ref
+                    .read(trainProvider.notifier)
+                    .assignUldToDolly(
+                      trainId: train.id,
+                      dollyIdx: index,
+                      container: c,
+                    );
+              },
+              builder: (context, candidateData, rejectedData) {
+                final isActive = candidateData.isNotEmpty;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: DottedBorder(
+                    color: isActive ? Colors.yellow : Colors.white,
+                    strokeWidth: 2,
+                    dashPattern: uld == null ? const [4, 4] : const [1, 0],
+                    borderType: BorderType.RRect,
+                    radius: const Radius.circular(8),
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      alignment: Alignment.center,
+                      child: uld == null
+                          ? const SizedBox()
+                          : LongPressDraggable<model.StorageContainer>(
                               data: uld,
                               feedback: Material(
                                 color: Colors.transparent,
@@ -121,10 +136,11 @@ class TrainPage extends ConsumerWidget {
                               ),
                               child: UldChip(uld),
                             ),
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
