@@ -6,6 +6,7 @@ import '../providers/storage_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../utils/uld_mover.dart';
 
 class StoragePage extends ConsumerWidget {
   const StoragePage({super.key});
@@ -46,6 +47,7 @@ class StoragePage extends ConsumerWidget {
                   : null,
               child: DragTarget<model.StorageContainer>(
                 onAccept: (c) {
+                  removeFromAll(ref, c);
                   ref.read(storageProvider.notifier).placeContainer(index, c);
                 },
                 builder: (context, candidateData, rejectedData) {

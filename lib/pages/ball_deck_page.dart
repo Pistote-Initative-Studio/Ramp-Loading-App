@@ -9,6 +9,7 @@ import '../widgets/uld_chip.dart';
 import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../utils/uld_mover.dart';
 
 class BallDeckPage extends ConsumerWidget {
   const BallDeckPage({super.key});
@@ -94,6 +95,7 @@ class BallDeckPage extends ConsumerWidget {
           : null,
       child: DragTarget<model.StorageContainer>(
         onAccept: (container) {
+          removeFromAll(ref, container);
           ref.read(ballDeckProvider.notifier).placeContainer(slotIdx, container);
         },
         builder: (context, candidateData, rejectedData) {
@@ -151,6 +153,7 @@ class BallDeckPage extends ConsumerWidget {
           : null,
       child: DragTarget<model.StorageContainer>(
         onAccept: (container) {
+          removeFromAll(ref, container);
           ref
               .read(ballDeckProvider.notifier)
               .placeIntoOverflowAt(container, overflowIndex);
