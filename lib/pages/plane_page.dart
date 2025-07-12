@@ -13,6 +13,7 @@ import '../providers/lower_deck_provider.dart';
 import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
+import '../widgets/transfer_menu.dart';
 
 final List<Aircraft> aircraftList = [
   Aircraft('B762', 'Boeinf 767-200 Freighter', [], [
@@ -246,6 +247,7 @@ class PlanePage extends ConsumerWidget {
                                 : slotRunSpacing,
                       ),
                       child: _buildSlot(
+                        context,
                         ref,
                         index,
                         _slotLabel(index),
@@ -268,6 +270,7 @@ class PlanePage extends ConsumerWidget {
                                 : slotRunSpacing,
                       ),
                       child: _buildSlot(
+                        context,
                         ref,
                         index,
                         _slotLabel(index),
@@ -281,7 +284,13 @@ class PlanePage extends ConsumerWidget {
           ),
           if (remainder == 1) ...[
             SizedBox(height: slotRunSpacing),
-            _buildSlot(ref, pairCount * 2, _slotLabel(pairCount * 2), outbound),
+            _buildSlot(
+              context,
+              ref,
+              pairCount * 2,
+              _slotLabel(pairCount * 2),
+              outbound,
+            ),
           ],
         ],
       );
@@ -293,7 +302,13 @@ class PlanePage extends ConsumerWidget {
             padding: EdgeInsets.only(
               bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
             ),
-            child: _buildSlot(ref, i, _slotLabel(i), outbound),
+            child: _buildSlot(
+              context,
+              ref,
+              i,
+              _slotLabel(i),
+              outbound,
+            ),
           );
         }),
       );
@@ -310,7 +325,13 @@ class PlanePage extends ConsumerWidget {
                 children: List.generate(9, (i) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(ref, i * 2, '${i + 1}L', outbound),
+                    child: _buildSlot(
+                      context,
+                      ref,
+                      i * 2,
+                      '${i + 1}L',
+                      outbound,
+                    ),
                   );
                 }),
               ),
@@ -321,7 +342,13 @@ class PlanePage extends ConsumerWidget {
                 children: List.generate(9, (i) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(ref, i * 2 + 1, '${i + 1}R', outbound),
+                    child: _buildSlot(
+                      context,
+                      ref,
+                      i * 2 + 1,
+                      '${i + 1}R',
+                      outbound,
+                    ),
                   );
                 }),
               ),
@@ -329,7 +356,13 @@ class PlanePage extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _buildSlot(ref, 18, 'A10', outbound),
+        _buildSlot(
+          context,
+          ref,
+          18,
+          'A10',
+          outbound,
+        ),
       ],
     );
   }
@@ -361,7 +394,7 @@ class PlanePage extends ConsumerWidget {
           padding: EdgeInsets.only(
             bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
           ),
-          child: _buildLowerDeckSlot(ref, i, labels[i], outbound),
+          child: _buildLowerDeckSlot(context, ref, i, labels[i], outbound),
         ),
       );
     }
@@ -369,6 +402,7 @@ class PlanePage extends ConsumerWidget {
   }
 
   Widget _buildLowerDeckSlot(
+    BuildContext context,
     WidgetRef ref,
     int index,
     String label,
@@ -378,11 +412,38 @@ class PlanePage extends ConsumerWidget {
     final container =
         outbound ? deck.outboundSlots[index] : deck.inboundSlots[index];
 
-    return DragTarget<model.StorageContainer>(
-      onAccept: (c) {
-        ref
-            .read(lowerDeckProvider.notifier)
-            .placeContainer(index, c, outbound: outbound);
+    return GestureDetector(
+      onLongPressStart: container == null
+          ? (details) => showTransferMenu(
+                context: context,
+                ref: ref,
+                position: details.globalPosition,
+                onSelected: (c) {
+                  ref
+                      .read(lowerDeckProvider.notifier)
+                      .placeContainer(index, c, outbound: outbound);
+                  ref
+                      .read(planeProvider.notifier)
+                      .placeLowerDeckContainer(index, c, outbound: outbound);
+                  final planeId = ref.watch(selectedPlaneIdProvider);
+                  if (planeId != null) {
+                    final planes = ref.read(planesProvider);
+                    try {
+                      final plane =
+                          planes.firstWhere((p) => p.id == planeId);
+                      final updated =
+                          ref.read(planeProvider.notifier).exportPlane(plane);
+                      ref.read(planesProvider.notifier).updatePlane(updated);
+                    } catch (_) {}
+                  }
+                },
+              )
+          : null,
+      child: DragTarget<model.StorageContainer>(
+        onAccept: (c) {
+          ref
+              .read(lowerDeckProvider.notifier)
+              .placeContainer(index, c, outbound: outbound);
         ref
             .read(planeProvider.notifier)
             .placeLowerDeckContainer(index, c, outbound: outbound);
@@ -426,6 +487,7 @@ class PlanePage extends ConsumerWidget {
           ),
         );
       },
+      ),
     );
   }
 
@@ -443,7 +505,13 @@ class PlanePage extends ConsumerWidget {
     return '$row$side';
   }
 
-  Widget _buildSlot(WidgetRef ref, int index, String label, bool outbound) {
+  Widget _buildSlot(
+    BuildContext context,
+    WidgetRef ref,
+    int index,
+    String label,
+    bool outbound,
+  ) {
     final planeState = ref.watch(planeProvider);
     final container =
         outbound
@@ -452,36 +520,59 @@ class PlanePage extends ConsumerWidget {
 
     final planeId = ref.watch(selectedPlaneIdProvider);
 
-    return DragTarget<model.StorageContainer>(
-      onAccept: (c) {
-        ref
-            .read(planeProvider.notifier)
-            .placeContainer(index, c, outbound: outbound);
-        if (planeId != null) {
-          final planes = ref.read(planesProvider);
-          try {
-            final plane = planes.firstWhere((p) => p.id == planeId);
-            final updated = ref.read(planeProvider.notifier).exportPlane(plane);
-            ref.read(planesProvider.notifier).updatePlane(updated);
-          } catch (_) {}
-        }
-      },
-      builder: (context, candidateData, rejectedData) {
-        final isActive = candidateData.isNotEmpty;
-        return DottedBorder(
-          color: isActive ? Colors.yellow : Colors.white,
-          strokeWidth: 2,
-          dashPattern: container == null ? [4, 4] : [1, 0],
-          borderType: BorderType.RRect,
-          radius: const Radius.circular(8),
-          child: Container(
-            width: 100, // Same as Ball Deck
-            height: 100, // Same as Ball Deck
-            alignment: Alignment.center,
-            child:
-                container == null
-                    ? Text(label, style: const TextStyle(color: Colors.white70))
-                    : LongPressDraggable<model.StorageContainer>(
+    return GestureDetector(
+      onLongPressStart: container == null
+          ? (details) => showTransferMenu(
+                context: context,
+                ref: ref,
+                position: details.globalPosition,
+                onSelected: (c) {
+                  ref
+                      .read(planeProvider.notifier)
+                      .placeContainer(index, c, outbound: outbound);
+                  final pid = ref.watch(selectedPlaneIdProvider);
+                  if (pid != null) {
+                    final planes = ref.read(planesProvider);
+                    try {
+                      final plane = planes.firstWhere((p) => p.id == pid);
+                      final updated =
+                          ref.read(planeProvider.notifier).exportPlane(plane);
+                      ref.read(planesProvider.notifier).updatePlane(updated);
+                    } catch (_) {}
+                  }
+                },
+              )
+          : null,
+      child: DragTarget<model.StorageContainer>(
+        onAccept: (c) {
+          ref
+              .read(planeProvider.notifier)
+              .placeContainer(index, c, outbound: outbound);
+          if (planeId != null) {
+            final planes = ref.read(planesProvider);
+            try {
+              final plane = planes.firstWhere((p) => p.id == planeId);
+              final updated =
+                  ref.read(planeProvider.notifier).exportPlane(plane);
+              ref.read(planesProvider.notifier).updatePlane(updated);
+            } catch (_) {}
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isActive = candidateData.isNotEmpty;
+          return DottedBorder(
+            color: isActive ? Colors.yellow : Colors.white,
+            strokeWidth: 2,
+            dashPattern: container == null ? [4, 4] : [1, 0],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(8),
+            child: Container(
+              width: 100,
+              height: 100,
+              alignment: Alignment.center,
+              child: container == null
+                  ? Text(label, style: const TextStyle(color: Colors.white70))
+                  : LongPressDraggable<model.StorageContainer>(
                       data: container,
                       feedback: Material(
                         color: Colors.transparent,
@@ -493,9 +584,10 @@ class PlanePage extends ConsumerWidget {
                       ),
                       child: UldChip(container),
                     ),
-          ),
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 }

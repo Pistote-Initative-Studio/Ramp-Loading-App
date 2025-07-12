@@ -8,6 +8,7 @@ import '../providers/ball_deck_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
+import '../widgets/transfer_menu.dart';
 
 class BallDeckPage extends ConsumerWidget {
   const BallDeckPage({super.key});
@@ -41,11 +42,17 @@ class BallDeckPage extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    buildSlot(ref, slotUld, index),
+                    buildSlot(context, ref, slotUld, index),
                     const SizedBox(width: slotSpacing),
-                    buildOverflowSlot(ref, overflowUld1, overflowStartIndex),
+                    buildOverflowSlot(
+                      context,
+                      ref,
+                      overflowUld1,
+                      overflowStartIndex,
+                    ),
                     const SizedBox(width: 8),
                     buildOverflowSlot(
+                      context,
                       ref,
                       overflowUld2,
                       overflowStartIndex + 1,
@@ -66,13 +73,31 @@ class BallDeckPage extends ConsumerWidget {
     );
   }
 
-  Widget buildSlot(WidgetRef ref, model.StorageContainer? uld, int slotIdx) {
-    return DragTarget<model.StorageContainer>(
-      onAccept: (container) {
-        ref.read(ballDeckProvider.notifier).placeContainer(slotIdx, container);
-      },
-      builder: (context, candidateData, rejectedData) {
-        return Container(
+  Widget buildSlot(
+    BuildContext context,
+    WidgetRef ref,
+    model.StorageContainer? uld,
+    int slotIdx,
+  ) {
+    return GestureDetector(
+      onLongPressStart: uld == null
+          ? (details) => showTransferMenu(
+                context: context,
+                ref: ref,
+                position: details.globalPosition,
+                onSelected: (c) {
+                  ref
+                      .read(ballDeckProvider.notifier)
+                      .placeContainer(slotIdx, c);
+                },
+              )
+          : null,
+      child: DragTarget<model.StorageContainer>(
+        onAccept: (container) {
+          ref.read(ballDeckProvider.notifier).placeContainer(slotIdx, container);
+        },
+        builder: (context, candidateData, rejectedData) {
+          return Container(
           width: 80,
           height: 80,
           decoration: BoxDecoration(
@@ -101,40 +126,54 @@ class BallDeckPage extends ConsumerWidget {
           ),
         );
       },
+    ),
     );
   }
 
   Widget buildOverflowSlot(
+    BuildContext context,
     WidgetRef ref,
     model.StorageContainer? uld,
     int overflowIndex,
   ) {
-    return DragTarget<model.StorageContainer>(
-      onAccept: (container) {
-        ref
-            .read(ballDeckProvider.notifier)
-            .placeIntoOverflowAt(container, overflowIndex);
-      },
-      builder: (context, candidateData, rejectedData) {
-        final isPlaceholder =
-            uld == null ||
-            uld.type == SizeEnum.EMPTY ||
-            uld.uld.startsWith('EMPTY_SLOT');
-        return DottedBorder(
-          color: candidateData.isNotEmpty ? Colors.yellow : Colors.white,
-          strokeWidth: 2,
-          dashPattern: [4, 4],
-          borderType: BorderType.RRect,
-          radius: const Radius.circular(8),
-          child: Container(
-            width: 80,
-            height: 80,
-            color: Colors.transparent,
-            child: Center(
-              child:
-                  isPlaceholder
-                      ? const SizedBox()
-                      : LongPressDraggable<model.StorageContainer>(
+    return GestureDetector(
+      onLongPressStart: (uld == null || uld.type == SizeEnum.EMPTY)
+          ? (details) => showTransferMenu(
+                context: context,
+                ref: ref,
+                position: details.globalPosition,
+                onSelected: (c) {
+                  ref
+                      .read(ballDeckProvider.notifier)
+                      .placeIntoOverflowAt(c, overflowIndex);
+                },
+              )
+          : null,
+      child: DragTarget<model.StorageContainer>(
+        onAccept: (container) {
+          ref
+              .read(ballDeckProvider.notifier)
+              .placeIntoOverflowAt(container, overflowIndex);
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isPlaceholder =
+              uld == null ||
+              uld.type == SizeEnum.EMPTY ||
+              uld.uld.startsWith('EMPTY_SLOT');
+          return DottedBorder(
+            color: candidateData.isNotEmpty ? Colors.yellow : Colors.white,
+            strokeWidth: 2,
+            dashPattern: [4, 4],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(8),
+            child: Container(
+              width: 80,
+              height: 80,
+              color: Colors.transparent,
+              child: Center(
+                child: isPlaceholder
+                    ? const SizedBox()
+                    : LongPressDraggable<model.StorageContainer>(
                         data: uld,
                         feedback: Material(
                           color: Colors.transparent,
@@ -146,10 +185,11 @@ class BallDeckPage extends ConsumerWidget {
                         ),
                         child: UldChip(uld),
                       ),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import '../models/container.dart' as model;
 import '../providers/storage_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
+import '../widgets/transfer_menu.dart';
 
 class StoragePage extends ConsumerWidget {
   const StoragePage({super.key});
@@ -30,29 +31,41 @@ class StoragePage extends ConsumerWidget {
           children: List.generate(slots.length, (index) {
             final container = slots[index];
 
-            return DragTarget<model.StorageContainer>(
-              onAccept: (c) {
-                ref.read(storageProvider.notifier).placeContainer(index, c);
-              },
-              builder: (context, candidateData, rejectedData) {
-                final isActive = candidateData.isNotEmpty;
-                return DottedBorder(
-                  color: isActive ? Colors.yellow : Colors.white,
-                  strokeWidth: 2,
-                  dashPattern: container == null ? [4, 4] : [1, 0],
-                  borderType: BorderType.RRect,
-                  radius: const Radius.circular(8),
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    alignment: Alignment.center,
-                    child:
-                        container == null
-                            ? const Text(
+            return GestureDetector(
+              onLongPressStart: container == null
+                  ? (details) => showTransferMenu(
+                        context: context,
+                        ref: ref,
+                        position: details.globalPosition,
+                        onSelected: (c) {
+                          ref
+                              .read(storageProvider.notifier)
+                              .placeContainer(index, c);
+                        },
+                      )
+                  : null,
+              child: DragTarget<model.StorageContainer>(
+                onAccept: (c) {
+                  ref.read(storageProvider.notifier).placeContainer(index, c);
+                },
+                builder: (context, candidateData, rejectedData) {
+                  final isActive = candidateData.isNotEmpty;
+                  return DottedBorder(
+                    color: isActive ? Colors.yellow : Colors.white,
+                    strokeWidth: 2,
+                    dashPattern: container == null ? [4, 4] : [1, 0],
+                    borderType: BorderType.RRect,
+                    radius: const Radius.circular(8),
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      alignment: Alignment.center,
+                      child: container == null
+                          ? const Text(
                               'Empty',
                               style: TextStyle(color: Colors.white54),
                             )
-                            : LongPressDraggable<model.StorageContainer>(
+                          : LongPressDraggable<model.StorageContainer>(
                               data: container,
                               feedback: Material(
                                 color: Colors.transparent,
@@ -64,9 +77,10 @@ class StoragePage extends ConsumerWidget {
                               ),
                               child: UldChip(container),
                             ),
-                  ),
-                );
-              },
+                    ),
+                  );
+                },
+              ),
             );
           }),
         ),
