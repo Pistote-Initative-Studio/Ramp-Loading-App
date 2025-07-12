@@ -201,8 +201,8 @@ class PlanePage extends ConsumerWidget {
                 padding: slotPadding,
                 child:
                     isLowerDeck
-                        ? _buildLowerDeckLayout(ref, isOutbound)
-                        : _buildLayout(ref, sequence, isOutbound),
+                        ? _buildLowerDeckLayout(context, ref, isOutbound)
+                        : _buildLayout(context, ref, sequence, isOutbound),
               ),
     );
   }
@@ -221,7 +221,7 @@ class PlanePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLayout(WidgetRef ref, LoadingSequence sequence, bool outbound) {
+  Widget _buildLayout(BuildContext context, WidgetRef ref, LoadingSequence sequence, bool outbound) {
     final plane = ref.watch(planeProvider);
     final slots = outbound ? plane.outboundSlots : plane.inboundSlots;
     final columns = _columnCount(sequence);
@@ -367,7 +367,7 @@ class PlanePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLowerDeckLayout(WidgetRef ref, bool outbound) {
+  Widget _buildLowerDeckLayout(BuildContext context, WidgetRef ref, bool outbound) {
     final deck = ref.watch(lowerDeckProvider);
     final slots = outbound ? deck.outboundSlots : deck.inboundSlots;
     const labels = [
