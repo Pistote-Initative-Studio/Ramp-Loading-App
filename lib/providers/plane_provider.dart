@@ -185,6 +185,36 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
       state = state.copyWith(lowerInboundSlots: updated);
     }
   }
+
+  /// Adds a container to the first available slot of the plane.
+  ///
+  /// When [lowerDeck] is true the container is placed on the lower deck,
+  /// otherwise it is placed on the main deck. The [outbound] flag selects
+  /// between the outbound and inbound views.
+  void addToFirstAvailable(
+    StorageContainer container, {
+    required bool outbound,
+    required bool lowerDeck,
+  }) {
+    if (lowerDeck) {
+      final slots =
+          outbound ? state.lowerOutboundSlots : state.lowerInboundSlots;
+      for (int i = 0; i < slots.length; i++) {
+        if (slots[i] == null) {
+          placeLowerDeckContainer(i, container, outbound: outbound);
+          return;
+        }
+      }
+    } else {
+      final slots = outbound ? state.outboundSlots : state.inboundSlots;
+      for (int i = 0; i < slots.length; i++) {
+        if (slots[i] == null) {
+          placeContainer(i, container, outbound: outbound);
+          return;
+        }
+      }
+    }
+  }
 }
 
 final planeProvider = StateNotifierProvider<PlaneNotifier, PlaneState>(

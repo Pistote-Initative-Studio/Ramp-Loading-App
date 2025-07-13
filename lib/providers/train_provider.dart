@@ -107,4 +107,20 @@ class TrainNotifier extends StateNotifier<List<Train>> {
       _saveState();
     }
   }
+
+  /// Adds a [container] to the first available dolly starting from the first
+  /// train. If all dollies are occupied the container is ignored.
+  void addToFirstAvailable(StorageContainer container) {
+    final trains = [...state];
+    for (final train in trains) {
+      for (int i = 0; i < train.dollys.length; i++) {
+        if (train.dollys[i].load == null) {
+          train.dollys[i] = Dolly(train.dollys[i].idx, load: container);
+          state = trains;
+          _saveState();
+          return;
+        }
+      }
+    }
+  }
 }
