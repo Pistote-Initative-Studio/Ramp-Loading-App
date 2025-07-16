@@ -25,7 +25,7 @@ class TrainPage extends ConsumerStatefulWidget {
 }
 
 class _TrainPageState extends ConsumerState<TrainPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   List<_TrainDraft> _drafts = [];
   int _trainCount = 0;
@@ -181,51 +181,51 @@ class _TrainPageState extends ConsumerState<TrainPage>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          SingleChildScrollView(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final listHeight = constraints.maxHeight - 72;
+          return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
-                children: List.generate(tugs.length, (i) {
-                  final tug = tugs[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: _buildTug(tug),
-                  );
-                }),
-              ),
-            ),
-          ),
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            onTap: _showDollyDialog,
-            tabs: List.generate(
-              _drafts.length,
-              (i) => Tab(text: 'Train ${i + 1}'),
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: List.generate(trains.length, (i) {
-                final train = trains[i];
-                return Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: 100,
-                      child: _buildDollyStack(context, train, outbound),
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    onTap: _showDollyDialog,
+                    tabs: List.generate(
+                      _drafts.length,
+                      (i) => Tab(text: 'Train ${i + 1}'),
                     ),
                   ),
-                );
-              }),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: List.generate(trains.length, (i) {
+                      final tug = i < tugs.length ? tugs[i] : null;
+                      final train = trains[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 24),
+                        child: Column(
+                          children: [
+                            _buildTug(tug),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: 100,
+                              height: listHeight,
+                              child: _buildDollyStack(context, train, outbound),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
