@@ -35,46 +35,49 @@ class _TrainPageState extends ConsumerState<TrainPage>
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: Text(
-            'Dolly Count for Train ${index + 1}',
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: DropdownButton<int>(
-            value: count,
-            dropdownColor: Colors.black,
-            underline: const SizedBox.shrink(),
-            items: List.generate(
-              10,
-              (i) => DropdownMenuItem(
-                value: i + 1,
-                child: Text(
-                  '${i + 1}',
-                  style: const TextStyle(color: Colors.white),
-                ),
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[900],
+              title: Text(
+                'Dolly Count for Train ${index + 1}',
+                style: const TextStyle(color: Colors.white),
               ),
-            ),
-            onChanged: (val) {
-              if (val != null) {
-                count = val;
-                setState(() {});
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() => _drafts[index].dollyCount = count);
-                Navigator.pop(context);
-              },
-              child: const Text('OK'),
-            ),
-          ],
+              content: DropdownButton<int>(
+                value: count,
+                dropdownColor: Colors.black,
+                underline: const SizedBox.shrink(),
+                items: List.generate(
+                  10,
+                  (i) => DropdownMenuItem(
+                    value: i + 1,
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                onChanged: (val) {
+                  if (val != null) {
+                    setStateDialog(() => count = val);
+                  }
+                },
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() => _drafts[index].dollyCount = count);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -184,45 +187,48 @@ class _TrainPageState extends ConsumerState<TrainPage>
       body: LayoutBuilder(
         builder: (context, constraints) {
           final listHeight = constraints.maxHeight - 72;
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    onTap: _showDollyDialog,
-                    tabs: List.generate(
-                      _drafts.length,
-                      (i) => Tab(text: 'Train ${i + 1}'),
+          return Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  onTap: _showDollyDialog,
+                  tabs: List.generate(
+                    _drafts.length,
+                    (i) => Tab(text: 'Train ${i + 1}'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(trains.length, (i) {
+                        final tug = i < tugs.length ? tugs[i] : null;
+                        final train = trains[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 24),
+                          child: Column(
+                            children: [
+                              _buildTug(tug),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: 100,
+                                height: listHeight,
+                                child: _buildDollyStack(
+                                    context, train, outbound),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(trains.length, (i) {
-                      final tug = i < tugs.length ? tugs[i] : null;
-                      final train = trains[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 24),
-                        child: Column(
-                          children: [
-                            _buildTug(tug),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: 100,
-                              height: listHeight,
-                              child: _buildDollyStack(context, train, outbound),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
