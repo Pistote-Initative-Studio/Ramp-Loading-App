@@ -252,7 +252,8 @@ class _TrainPageState extends ConsumerState<TrainPage>
           const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildTug(Tug? tug) {
