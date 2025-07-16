@@ -57,15 +57,16 @@ class TrainAdapter extends TypeAdapter<Train> {
       id: fields[0] as String,
       label: fields[1] as String,
       dollyCount: fields[2] as int,
-      dollys: (fields[3] as List).cast<Dolly>(),
-      colorIndex: fields[4] as int,
+      inboundDollys: (fields[3] as List).cast<Dolly>(),
+      outboundDollys: (fields[4] as List).cast<Dolly>(),
+      colorIndex: fields[5] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Train obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -73,8 +74,10 @@ class TrainAdapter extends TypeAdapter<Train> {
       ..writeByte(2)
       ..write(obj.dollyCount)
       ..writeByte(3)
-      ..write(obj.dollys)
+      ..write(obj.inboundDollys)
       ..writeByte(4)
+      ..write(obj.outboundDollys)
+      ..writeByte(5)
       ..write(obj.colorIndex);
   }
 
