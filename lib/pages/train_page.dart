@@ -30,14 +30,65 @@ class _TrainPageState extends ConsumerState<TrainPage>
   List<_TrainDraft> _drafts = [];
   int _trainCount = 0;
 
+  Future<void> _showDollyDialog(int index) async {
+    int count = _drafts[index].dollyCount.clamp(1, 10);
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: Text(
+            'Dolly Count for Train ${index + 1}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          content: DropdownButton<int>(
+            value: count,
+            dropdownColor: Colors.black,
+            underline: const SizedBox.shrink(),
+            items: List.generate(
+              10,
+              (i) => DropdownMenuItem(
+                value: i + 1,
+                child: Text(
+                  '${i + 1}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+            onChanged: (val) {
+              if (val != null) {
+                count = val;
+                setState(() {});
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _drafts[index].dollyCount = count);
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     final trains = ref.read(trainProvider);
-    _drafts =
-        trains.map((t) => _TrainDraft(id: t.id, dollyCount: t.dollyCount)).toList();
+    _drafts = trains
+        .map((t) => _TrainDraft(id: t.id, dollyCount: t.dollyCount))
+        .toList();
     if (_drafts.isEmpty) {
-      _drafts.add(_TrainDraft(id: UniqueKey().toString(), dollyCount: 0));
+      _drafts.add(_TrainDraft(id: UniqueKey().toString(), dollyCount: 1));
     }
     _trainCount = _drafts.length;
     _tabController = TabController(length: _trainCount, vsync: this);
@@ -75,6 +126,45 @@ class _TrainPageState extends ConsumerState<TrainPage>
         actions: [
           Row(
             children: [
+              const Text('Trains', style: TextStyle(color: Colors.white)),
+              const SizedBox(width: 8),
+              DropdownButton<int>(
+                value: _trainCount,
+                underline: const SizedBox.shrink(),
+                dropdownColor: Colors.black,
+                items: List.generate(
+                  15,
+                  (i) => DropdownMenuItem(
+                    value: i + 1,
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                onChanged: (val) {
+                  if (val == null) return;
+                  setState(() {
+                    if (val > _drafts.length) {
+                      for (int i = _drafts.length; i < val; i++) {
+                        _drafts.add(
+                          _TrainDraft(
+                            id: UniqueKey().toString(),
+                            dollyCount: 1,
+                          ),
+                        );
+                      }
+                    } else if (val < _drafts.length) {
+                      _drafts = _drafts.sublist(0, val);
+                    }
+                    _trainCount = val;
+                    _tabController.dispose();
+                    _tabController =
+                        TabController(length: _trainCount, vsync: this);
+                  });
+                },
+              ),
+              const SizedBox(width: 16),
               const Text('Inbound', style: TextStyle(color: Colors.white)),
               Switch(
                 value: outbound,
@@ -93,96 +183,46 @@ class _TrainPageState extends ConsumerState<TrainPage>
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                const Text('Trains', style: TextStyle(color: Colors.white)),
-                const SizedBox(width: 8),
-                DropdownButton<int>(
-                  value: _trainCount,
-                  underline: const SizedBox.shrink(),
-                  dropdownColor: Colors.black,
-                  items: List.generate(
-                    25,
-                    (i) => DropdownMenuItem(
-                      value: i + 1,
-                      child: Text('${i + 1}',
-                          style: const TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                  onChanged: (val) {
-                    if (val == null) return;
-                    setState(() {
-                      if (val > _drafts.length) {
-                        for (int i = _drafts.length; i < val; i++) {
-                          _drafts.add(
-                              _TrainDraft(id: UniqueKey().toString(), dollyCount: 0));
-                        }
-                      } else if (val < _drafts.length) {
-                        _drafts = _drafts.sublist(0, val);
-                      }
-                      _trainCount = val;
-                      _tabController.dispose();
-                      _tabController =
-                          TabController(length: _trainCount, vsync: this);
-                    });
-                  },
-                ),
-              ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: List.generate(tugs.length, (i) {
+                  final tug = tugs[i];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: _buildTug(tug),
+                  );
+                }),
+              ),
             ),
           ),
           TabBar(
             controller: _tabController,
             isScrollable: true,
+            onTap: _showDollyDialog,
             tabs: List.generate(
               _drafts.length,
               (i) => Tab(text: 'Train ${i + 1}'),
             ),
           ),
-          SizedBox(
-            height: 60,
+          Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: List.generate(_drafts.length, (i) {
-                final draft = _drafts[i];
-                return Center(
-                  child: Slider(
-                    value: draft.dollyCount.toDouble(),
-                    min: 0,
-                    max: 10,
-                    divisions: 10,
-                    label: '${draft.dollyCount}',
-                    onChanged: (v) =>
-                        setState(() => draft.dollyCount = v.toInt()),
+              children: List.generate(trains.length, (i) {
+                final train = trains[i];
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: 100,
+                      child: _buildDollyStack(context, train, outbound),
+                    ),
                   ),
                 );
               }),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(trains.length, (i) {
-                    final train = trains[i];
-                    final Tug? tug = i < tugs.length ? tugs[i] : null;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 24),
-                      child: Column(
-                        children: [
-                          _buildTug(tug),
-                          const SizedBox(height: 24),
-                          _buildDollyStack(context, train, outbound),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-              ),
             ),
           ),
         ],
@@ -215,79 +255,74 @@ class _TrainPageState extends ConsumerState<TrainPage>
   }
 
   Widget _buildDollyStack(BuildContext context, Train train, bool outbound) {
-    return SizedBox(
-      width: 100,
-      height: 400,
-      child: ListView.builder(
-        itemCount: train.dollyCount,
-        itemBuilder: (context, index) {
-          final dolly =
-              outbound ? train.outboundDollys[index] : train.inboundDollys[index];
-          final uld = dolly.load;
-          return GestureDetector(
-            onLongPressStart: uld == null
-                ? (details) => showTransferMenu(
-                      context: context,
-                      ref: ref,
-                      position: details.globalPosition,
-                      onSelected: (c) {
-                        ref.read(trainProvider.notifier).assignUldToDolly(
-                              trainId: train.id,
-                              dollyIdx: index,
-                              container: c,
-                              outbound: outbound,
-                            );
-                      },
-                    )
-                : null,
-            child: DragTarget<model.StorageContainer>(
-              onAccept: (c) {
-                removeFromAll(ref, c);
-                ref
-                    .read(trainProvider.notifier)
-                    .assignUldToDolly(
-                      trainId: train.id,
-                      dollyIdx: index,
-                      container: c,
-                      outbound: outbound,
-                    );
-              },
-              builder: (context, candidateData, rejectedData) {
-                final isActive = candidateData.isNotEmpty;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: DottedBorder(
-                    color: isActive ? Colors.yellow : Colors.white,
-                    strokeWidth: 2,
-                    dashPattern: uld == null ? const [4, 4] : const [1, 0],
-                    borderType: BorderType.RRect,
-                    radius: const Radius.circular(8),
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      alignment: Alignment.center,
-                      child: uld == null
-                          ? const SizedBox()
-                          : LongPressDraggable<model.StorageContainer>(
-                              data: uld,
-                              feedback: Material(
-                                color: Colors.transparent,
-                                child: UldChip(uld),
-                              ),
-                              childWhenDragging: Opacity(
-                                opacity: 0.2,
-                                child: UldChip(uld),
-                              ),
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: train.dollyCount,
+      itemBuilder: (context, index) {
+        final dolly =
+            outbound ? train.outboundDollys[index] : train.inboundDollys[index];
+        final uld = dolly.load;
+        return GestureDetector(
+          onLongPressStart: uld == null
+              ? (details) => showTransferMenu(
+                    context: context,
+                    ref: ref,
+                    position: details.globalPosition,
+                    onSelected: (c) {
+                      ref.read(trainProvider.notifier).assignUldToDolly(
+                            trainId: train.id,
+                            dollyIdx: index,
+                            container: c,
+                            outbound: outbound,
+                          );
+                    },
+                  )
+              : null,
+          child: DragTarget<model.StorageContainer>(
+            onAccept: (c) {
+              removeFromAll(ref, c);
+              ref.read(trainProvider.notifier).assignUldToDolly(
+                    trainId: train.id,
+                    dollyIdx: index,
+                    container: c,
+                    outbound: outbound,
+                  );
+            },
+            builder: (context, candidateData, rejectedData) {
+              final isActive = candidateData.isNotEmpty;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DottedBorder(
+                  color: isActive ? Colors.yellow : Colors.white,
+                  strokeWidth: 2,
+                  dashPattern: uld == null ? const [4, 4] : const [1, 0],
+                  borderType: BorderType.RRect,
+                  radius: const Radius.circular(8),
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    alignment: Alignment.center,
+                    child: uld == null
+                        ? const SizedBox()
+                        : LongPressDraggable<model.StorageContainer>(
+                            data: uld,
+                            feedback: Material(
+                              color: Colors.transparent,
                               child: UldChip(uld),
                             ),
-                    ),
+                            childWhenDragging: Opacity(
+                              opacity: 0.2,
+                              child: UldChip(uld),
+                            ),
+                            child: UldChip(uld),
+                          ),
                   ),
-                );
-              },
-            ),
-          );
-        },
-      ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
