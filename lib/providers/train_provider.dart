@@ -27,8 +27,9 @@ class TrainNotifier extends StateNotifier<List<Train>> {
       // If it's a new day, clear the ULDs but keep config
       if (lastOpened != today) {
         for (final train in loaded) {
-          for (int i = 0; i < train.dollys.length; i++) {
-            train.dollys[i] = Dolly(train.dollys[i].idx); // clear load
+          for (int i = 0; i < train.inboundDollys.length; i++) {
+            train.inboundDollys[i] = Dolly(train.inboundDollys[i].idx);
+            train.outboundDollys[i] = Dolly(train.outboundDollys[i].idx);
           }
         }
       }
@@ -71,20 +72,35 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     required String trainId,
     required int dollyIdx,
     required StorageContainer container,
+    required bool outbound,
   }) {
     final trains = [...state];
     final train = trains.firstWhere((t) => t.id == trainId);
-    final dolly = train.dollys[dollyIdx];
-    train.dollys[dollyIdx] = Dolly(dolly.idx, load: container);
+    if (outbound) {
+      final dolly = train.outboundDollys[dollyIdx];
+      train.outboundDollys[dollyIdx] = Dolly(dolly.idx, load: container);
+    } else {
+      final dolly = train.inboundDollys[dollyIdx];
+      train.inboundDollys[dollyIdx] = Dolly(dolly.idx, load: container);
+    }
     state = trains;
     _saveState();
   }
 
-  void clearUldFromDolly({required String trainId, required int dollyIdx}) {
+  void clearUldFromDolly({
+    required String trainId,
+    required int dollyIdx,
+    required bool outbound,
+  }) {
     final trains = [...state];
     final train = trains.firstWhere((t) => t.id == trainId);
-    final dolly = train.dollys[dollyIdx];
-    train.dollys[dollyIdx] = Dolly(dolly.idx); // clears load
+    if (outbound) {
+      final dolly = train.outboundDollys[dollyIdx];
+      train.outboundDollys[dollyIdx] = Dolly(dolly.idx);
+    } else {
+      final dolly = train.inboundDollys[dollyIdx];
+      train.inboundDollys[dollyIdx] = Dolly(dolly.idx);
+    }
     state = trains;
     _saveState();
   }
@@ -95,9 +111,13 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     bool changed = false;
     for (int t = 0; t < trains.length; t++) {
       final train = trains[t];
-      for (int i = 0; i < train.dollys.length; i++) {
-        if (train.dollys[i].load?.id == container.id) {
-          train.dollys[i] = Dolly(train.dollys[i].idx); // clear
+      for (int i = 0; i < train.inboundDollys.length; i++) {
+        if (train.inboundDollys[i].load?.id == container.id) {
+          train.inboundDollys[i] = Dolly(train.inboundDollys[i].idx);
+          changed = true;
+        }
+        if (train.outboundDollys[i].load?.id == container.id) {
+          train.outboundDollys[i] = Dolly(train.outboundDollys[i].idx);
           changed = true;
         }
       }
@@ -110,12 +130,13 @@ class TrainNotifier extends StateNotifier<List<Train>> {
 
   /// Adds a [container] to the first available dolly starting from the first
   /// train. If all dollies are occupied the container is ignored.
-  void addToFirstAvailable(StorageContainer container) {
+  void addToFirstAvailable(StorageContainer container, {required bool outbound}) {
     final trains = [...state];
     for (final train in trains) {
-      for (int i = 0; i < train.dollys.length; i++) {
-        if (train.dollys[i].load == null) {
-          train.dollys[i] = Dolly(train.dollys[i].idx, load: container);
+      final list = outbound ? train.outboundDollys : train.inboundDollys;
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].load == null) {
+          list[i] = Dolly(list[i].idx, load: container);
           state = trains;
           _saveState();
           return;
@@ -124,3 +145,5 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     }
   }
 }
+
+final isTrainOutboundProvider = StateProvider<bool>((ref) => false);

@@ -6,12 +6,11 @@ import '../providers/plane_provider.dart';
 import '../providers/planes_provider.dart';
 import '../models/plane.dart';
 import 'plane_page.dart' show lowerDeckviewProvider;
-import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
+import '../providers/train_provider.dart';
 import '../providers/ball_deck_provider.dart';
 import '../providers/storage_provider.dart';
 import '../models/aircraft.dart';
-import '../models/train.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
 import '../models/uld_type.dart';
@@ -27,12 +26,6 @@ class TugDraft {
     : labelController = TextEditingController(text: label);
 }
 
-class _TrainDraft {
-  String id;
-  int dollyCount;
-
-  _TrainDraft({required this.id, required this.dollyCount});
-}
 
 class _PlaneDraft {
   String id;
@@ -64,10 +57,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   List<TugDraft> tugDrafts = [];
   int tugCount = 0;
 
-  //Train config drafts
-  List<_TrainDraft> _trainDrafts = [];
-  int _trainCount = 0;
-
   // Plane config drafts
   List<_PlaneDraft> _planeDrafts = [];
   int _planeCount = 0;
@@ -95,21 +84,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       final deckSlots = ref.read(ballDeckProvider).slots.length;
       setState(() => ballDeckCount = deckSlots);
 
-      final trains = ref.read(trainProvider);
       final tugs = ref.read(tugProvider);
       final planes = ref.read(planesProvider);
       setState(() {
-        _trainDrafts =
-            trains
-                .map((t) => _TrainDraft(id: t.id, dollyCount: t.dollyCount))
-                .toList();
-        _trainCount = _trainDrafts.isEmpty ? 1 : _trainDrafts.length;
-        if (_trainDrafts.isEmpty) {
-          _trainDrafts.add(
-            _TrainDraft(id: UniqueKey().toString(), dollyCount: 0),
-          );
-        }
-
         tugDrafts =
             tugs
                 .map(
@@ -247,9 +224,13 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                       ref.read(ballDeckProvider.notifier).addUld(container);
                       break;
                     case 'Train':
+                      final outbound = ref.read(isTrainOutboundProvider);
                       ref
                           .read(trainProvider.notifier)
-                          .addToFirstAvailable(container);
+                          .addToFirstAvailable(
+                            container,
+                            outbound: outbound,
+                          );
                       break;
                     case 'Plane':
                       final outbound = ref.read(isOutboundProvider);
@@ -291,22 +272,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     );
   }
 
-  void _commitTrains() {
-    final newTrains =
-        _trainDrafts
-            .asMap()
-            .entries
-            .map(
-              (e) => Train.withAutoDolly(
-                id: e.value.id,
-                label: 'Train ${e.key + 1}',
-                dollyCount: e.value.dollyCount,
-                colorIndex: 0,
-              ),
-            )
-            .toList();
-    ref.read(trainProvider.notifier).setTrains(newTrains);
-  }
 
   void _commitTugs() {
     final newTugs =
@@ -632,69 +597,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               );
             },
             child: const Text('Apply'),
-          ),
-          const SizedBox(height: 32),
-          const Text(
-            '🚂 Train Configuration',
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          Slider(
-            value: _trainCount.toDouble(),
-            min: 0,
-            max: 25,
-            divisions: 25,
-            label: '$_trainCount',
-            onChanged: (v) {
-              final newCount = v.toInt();
-              setState(() {
-                if (newCount > _trainDrafts.length) {
-                  for (int i = _trainDrafts.length; i < newCount; i++) {
-                    _trainDrafts.add(
-                      _TrainDraft(id: UniqueKey().toString(), dollyCount: 0),
-                    );
-                  }
-                } else if (newCount < _trainDrafts.length) {
-                  _trainDrafts = _trainDrafts.sublist(0, newCount);
-                }
-                _trainCount = newCount;
-              });
-            },
-          ),
-          Column(
-            children: List.generate(_trainDrafts.length, (i) {
-              final draft = _trainDrafts[i];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Slider(
-                    value: draft.dollyCount.toDouble(),
-                    min: 0,
-                    max: 10,
-                    divisions: 10,
-                    label: '${draft.dollyCount}',
-                    onChanged:
-                        (v) => setState(() => draft.dollyCount = v.toInt()),
-                  ),
-                ],
-              );
-            }),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Summary: $_trainCount Trains, '
-              '${_trainDrafts.fold<int>(0, (s, d) => s + d.dollyCount)} Total Dollies',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _commitTrains();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Train Configuration Updated')),
-              );
-            },
-            child: const Text('Apply Changes'),
           ),
           const SizedBox(height: 32),
           const Text('🏬 Storage Slots', style: TextStyle(color: Colors.white)),
