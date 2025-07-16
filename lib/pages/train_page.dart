@@ -124,10 +124,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Trains'),
-        backgroundColor: Colors.grey[900],
-      ),
       body: Column(
         children: [
           Container(
