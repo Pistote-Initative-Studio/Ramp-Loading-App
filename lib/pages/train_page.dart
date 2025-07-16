@@ -127,112 +127,114 @@ class _TrainPageState extends ConsumerState<TrainPage>
       appBar: AppBar(
         title: const Text('Trains'),
         backgroundColor: Colors.grey[900],
-        actions: [
-          Row(
-            children: [
-              const Text('Trains', style: TextStyle(color: Colors.white)),
-              const SizedBox(width: 8),
-              DropdownButton<int>(
-                value: _trainCount,
-                underline: const SizedBox.shrink(),
-                dropdownColor: Colors.black,
-                items: List.generate(
-                  15,
-                  (i) => DropdownMenuItem(
-                    value: i + 1,
-                    child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-                onChanged: (val) {
-                  if (val == null) return;
-                  setState(() {
-                    if (val > _drafts.length) {
-                      for (int i = _drafts.length; i < val; i++) {
-                        _drafts.add(
-                          _TrainDraft(
-                            id: UniqueKey().toString(),
-                            dollyCount: 1,
-                          ),
-                        );
-                      }
-                    } else if (val < _drafts.length) {
-                      _drafts = _drafts.sublist(0, val);
-                    }
-                    _trainCount = val;
-                    _tabController.dispose();
-                    _tabController =
-                        TabController(length: _trainCount, vsync: this);
-                  });
-                },
-              ),
-              const SizedBox(width: 16),
-              const Text('Inbound', style: TextStyle(color: Colors.white)),
-              Switch(
-                value: outbound,
-                onChanged: (val) =>
-                    ref.read(isTrainOutboundProvider.notifier).state = val,
-              ),
-              const Text('Outbound', style: TextStyle(color: Colors.white)),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _applyChanges,
-                child: const Text('Apply'),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
+          Container(
+            height: 60,
+            color: Colors.grey[900],
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                const Text('Trains', style: TextStyle(color: Colors.white)),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  value: _trainCount,
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: Colors.black,
+                  items: List.generate(
+                    15,
+                    (i) => DropdownMenuItem(
+                      value: i + 1,
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    if (val == null) return;
+                    setState(() {
+                      if (val > _drafts.length) {
+                        for (int i = _drafts.length; i < val; i++) {
+                          _drafts.add(
+                            _TrainDraft(
+                              id: UniqueKey().toString(),
+                              dollyCount: 1,
+                            ),
+                          );
+                        }
+                      } else if (val < _drafts.length) {
+                        _drafts = _drafts.sublist(0, val);
+                      }
+                      _trainCount = val;
+                      _tabController.dispose();
+                      _tabController =
+                          TabController(length: _trainCount, vsync: this);
+                    });
+                  },
+                ),
+                const SizedBox(width: 16),
+                const Text('Inbound', style: TextStyle(color: Colors.white)),
+                Switch(
+                  value: outbound,
+                  onChanged: (val) =>
+                      ref.read(isTrainOutboundProvider.notifier).state = val,
+                ),
+                const Text('Outbound', style: TextStyle(color: Colors.white)),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _applyChanges,
+                  child: const Text('Apply'),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: Colors.black,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              onTap: _showDollyDialog,
+              tabs: List.generate(
+                _drafts.length,
+                (i) => Tab(text: 'Train ${i + 1}'),
+              ),
+            ),
+          ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final listHeight = constraints.maxHeight - 72;
                 return Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      TabBar(
-                        controller: _tabController,
-                        isScrollable: true,
-                        onTap: _showDollyDialog,
-                        tabs: List.generate(
-                          _drafts.length,
-                          (i) => Tab(text: 'Train ${i + 1}'),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: List.generate(trains.length, (i) {
-                              final tug = i < tugs.length ? tugs[i] : null;
-                              final train = trains[i];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 24),
-                                child: Column(
-                                  children: [
-                                    _buildTug(tug),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      width: 100,
-                                      height: listHeight,
-                                      child: _buildDollyStack(
-                                          context, train, outbound),
-                                    ),
-                                  ],
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(trains.length, (i) {
+                        final tug = i < tugs.length ? tugs[i] : null;
+                        final train = trains[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 24),
+                          child: Column(
+                            children: [
+                              _buildTug(tug),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: 100,
+                                height: listHeight,
+                                child: _buildDollyStack(
+                                  context,
+                                  train,
+                                  outbound,
                                 ),
-                              );
-                            }),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
+                        );
+                      }),
+                    ),
                   ),
                 );
               },
