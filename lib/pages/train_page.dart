@@ -9,6 +9,7 @@ import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/color_palette.dart';
 import '../widgets/transfer_menu.dart';
+import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 
 class _TrainDraft {
@@ -184,54 +185,61 @@ class _TrainPageState extends ConsumerState<TrainPage>
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final listHeight = constraints.maxHeight - 72;
-          return Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  onTap: _showDollyDialog,
-                  tabs: List.generate(
-                    _drafts.length,
-                    (i) => Tab(text: 'Train ${i + 1}'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(trains.length, (i) {
-                        final tug = i < tugs.length ? tugs[i] : null;
-                        final train = trains[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 24),
-                          child: Column(
-                            children: [
-                              _buildTug(tug),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: 100,
-                                height: listHeight,
-                                child: _buildDollyStack(
-                                    context, train, outbound),
-                              ),
-                            ],
+      body: Column(
+        children: [
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final listHeight = constraints.maxHeight - 72;
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        isScrollable: true,
+                        onTap: _showDollyDialog,
+                        tabs: List.generate(
+                          _drafts.length,
+                          (i) => Tab(text: 'Train ${i + 1}'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: List.generate(trains.length, (i) {
+                              final tug = i < tugs.length ? tugs[i] : null;
+                              final train = trains[i];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 24),
+                                child: Column(
+                                  children: [
+                                    _buildTug(tug),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: 100,
+                                      height: listHeight,
+                                      child: _buildDollyStack(
+                                          context, train, outbound),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
                           ),
-                        );
-                      }),
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 60, child: TransferArea()),
+        ],
       ),
     );
   }
