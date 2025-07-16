@@ -122,14 +122,26 @@ class _TrainPageState extends ConsumerState<TrainPage>
     final tugs = ref.watch(tugProvider);
     final outbound = ref.watch(isTrainOutboundProvider);
 
+    const topBarHeight = 60.0;
+
+    final media = MediaQuery.of(context);
+    final availableHeight = media.size.height -
+        media.padding.top -
+        topBarHeight -
+        kTextTabBarHeight -
+        60;
+    final listHeight = availableHeight - 72;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          Container(
-            height: 60,
-            color: Colors.grey[900],
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Container(
+              height: topBarHeight,
+              color: Colors.grey[900],
+              padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               children: [
                 const Text('Trains', style: TextStyle(color: Colors.white)),
@@ -186,54 +198,55 @@ class _TrainPageState extends ConsumerState<TrainPage>
               ],
             ),
           ),
-          Container(
-            color: Colors.black,
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              onTap: _showDollyDialog,
-              tabs: List.generate(
-                _drafts.length,
-                (i) => Tab(text: 'Train ${i + 1}'),
-              ),
-            ),
-          ),
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final listHeight = constraints.maxHeight - 72;
-                return Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(trains.length, (i) {
-                        final tug = i < tugs.length ? tugs[i] : null;
-                        final train = trains[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 24),
-                          child: Column(
-                            children: [
-                              _buildTug(tug),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: 100,
-                                height: listHeight,
-                                child: _buildDollyStack(
-                                  context,
-                                  train,
-                                  outbound,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    color: Colors.black,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      onTap: _showDollyDialog,
+                      tabs: List.generate(
+                        _drafts.length,
+                        (i) => Tab(text: 'Train ${i + 1}'),
+                      ),
                     ),
                   ),
-                );
-              },
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: List.generate(trains.length, (i) {
+                          final tug = i < tugs.length ? tugs[i] : null;
+                          final train = trains[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 24),
+                            child: Column(
+                              children: [
+                                _buildTug(tug),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: 100,
+                                  height: listHeight,
+                                  child: _buildDollyStack(
+                                    context,
+                                    train,
+                                    outbound,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 60, child: TransferArea()),
