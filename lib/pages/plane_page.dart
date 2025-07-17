@@ -255,7 +255,7 @@ class PlanePage extends ConsumerWidget {
                         context,
                         ref,
                         index,
-                        _slotLabel(index),
+                        _slotLabel(sequence, index),
                         outbound,
                       ),
                     );
@@ -278,7 +278,7 @@ class PlanePage extends ConsumerWidget {
                         context,
                         ref,
                         index,
-                        _slotLabel(index),
+                        _slotLabel(sequence, index),
                         outbound,
                       ),
                     );
@@ -293,7 +293,7 @@ class PlanePage extends ConsumerWidget {
               context,
               ref,
               pairCount * 2,
-              _slotLabel(pairCount * 2),
+              _slotLabel(sequence, pairCount * 2),
               outbound,
             ),
           ],
@@ -311,7 +311,7 @@ class PlanePage extends ConsumerWidget {
               context,
               ref,
               i,
-              _slotLabel(i),
+              _slotLabel(sequence, i),
               outbound,
             ),
           );
@@ -508,7 +508,8 @@ class PlanePage extends ConsumerWidget {
     return 0;
   }
 
-  String _slotLabel(int index) {
+  String _slotLabel(LoadingSequence sequence, int index) {
+    if (sequence.order.length >= 21 && index == 20) return 'A11';
     if (index == 18) return 'A10';
     final row = index ~/ 2 + 1;
     final side = index % 2 == 0 ? 'L' : 'R';
