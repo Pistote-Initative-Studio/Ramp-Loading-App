@@ -26,20 +26,16 @@ class Train {
   final int dollyCount;
 
   @HiveField(3)
-  final List<Dolly> inboundDollys;
+  final List<Dolly> dollys;
 
   @HiveField(4)
-  final List<Dolly> outboundDollys;
-
-  @HiveField(5)
   final int colorIndex;
 
   Train({
     required this.id,
     required this.label,
     required this.dollyCount,
-    required this.inboundDollys,
-    required this.outboundDollys,
+    required this.dollys,
     required this.colorIndex,
   });
 
@@ -53,8 +49,7 @@ class Train {
       id: id,
       label: label,
       dollyCount: dollyCount,
-      inboundDollys: List.generate(dollyCount, (i) => Dolly(i + 1)),
-      outboundDollys: List.generate(dollyCount, (i) => Dolly(i + 1)),
+      dollys: List.generate(dollyCount, (i) => Dolly(i + 1)),
       colorIndex: colorIndex,
     );
   }
@@ -63,16 +58,14 @@ class Train {
     String? id,
     String? label,
     int? dollyCount,
-    List<Dolly>? inboundDollys,
-    List<Dolly>? outboundDollys,
+    List<Dolly>? dollys,
     int? colorIndex,
   }) {
     return Train(
       id: id ?? this.id,
       label: label ?? this.label,
       dollyCount: dollyCount ?? this.dollyCount,
-      inboundDollys: inboundDollys ?? this.inboundDollys,
-      outboundDollys: outboundDollys ?? this.outboundDollys,
+      dollys: dollys ?? this.dollys,
       colorIndex: colorIndex ?? this.colorIndex,
     );
   }

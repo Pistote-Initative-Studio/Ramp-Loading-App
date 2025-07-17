@@ -120,7 +120,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
   Widget build(BuildContext context) {
     final trains = ref.watch(trainProvider);
     final tugs = ref.watch(tugProvider);
-    final outbound = ref.watch(isTrainOutboundProvider);
 
     const topBarHeight = 60.0;
 
@@ -183,13 +182,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
                   },
                 ),
                 const SizedBox(width: 16),
-                const Text('Inbound', style: TextStyle(color: Colors.white)),
-                Switch(
-                  value: outbound,
-                  onChanged: (val) =>
-                      ref.read(isTrainOutboundProvider.notifier).state = val,
-                ),
-                const Text('Outbound', style: TextStyle(color: Colors.white)),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _applyChanges,
@@ -235,7 +227,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
                                   child: _buildDollyStack(
                                     context,
                                     train,
-                                    outbound,
                                   ),
                                 ),
                               ],
@@ -280,13 +271,12 @@ class _TrainPageState extends ConsumerState<TrainPage>
     );
   }
 
-  Widget _buildDollyStack(BuildContext context, Train train, bool outbound) {
+  Widget _buildDollyStack(BuildContext context, Train train) {
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemCount: train.dollyCount,
       itemBuilder: (context, index) {
-        final dolly =
-            outbound ? train.outboundDollys[index] : train.inboundDollys[index];
+        final dolly = train.dollys[index];
         final uld = dolly.load;
         return GestureDetector(
           onLongPressStart: uld == null
@@ -299,7 +289,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
                             trainId: train.id,
                             dollyIdx: index,
                             container: c,
-                            outbound: outbound,
                           );
                     },
                   )
@@ -311,7 +300,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
                     trainId: train.id,
                     dollyIdx: index,
                     container: c,
-                    outbound: outbound,
                   );
             },
             builder: (context, candidateData, rejectedData) {

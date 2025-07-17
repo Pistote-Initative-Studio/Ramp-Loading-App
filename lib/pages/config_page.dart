@@ -229,12 +229,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                       ref.read(ballDeckProvider.notifier).addUld(container);
                       break;
                     case 'Train':
-                      final outbound = ref.read(isTrainOutboundProvider);
                       ref
                           .read(trainProvider.notifier)
                           .addToFirstAvailable(
                             container,
-                            outbound: outbound,
                           );
                       break;
                     case 'Plane':
