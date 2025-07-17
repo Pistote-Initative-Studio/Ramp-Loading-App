@@ -552,21 +552,46 @@ class PlanePage extends ConsumerWidget {
             width: 100, // Same as Ball Deck
             height: 100, // Same as Ball Deck
             alignment: Alignment.center,
-            child:
-                container == null
-                    ? Text(label, style: const TextStyle(color: Colors.white70))
-                    : LongPressDraggable<model.StorageContainer>(
-                      data: container,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: UldChip(container),
+            child: container == null
+                ? Text(label, style: const TextStyle(color: Colors.white70))
+                : Stack(
+                    children: [
+                      Positioned(
+                        top: 2,
+                        left: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.2,
-                        child: UldChip(container),
+                      Center(
+                        child: LongPressDraggable<model.StorageContainer>(
+                          data: container,
+                          feedback: Material(
+                            color: Colors.transparent,
+                            child: UldChip(container),
+                          ),
+                          childWhenDragging: Opacity(
+                            opacity: 0.2,
+                            child: UldChip(container),
+                          ),
+                          child: UldChip(container),
+                        ),
                       ),
-                      child: UldChip(container),
-                    ),
+                    ],
+                  ),
           ),
         );
       },
@@ -675,17 +700,43 @@ class PlanePage extends ConsumerWidget {
               alignment: Alignment.center,
               child: container == null
                   ? Text(label, style: const TextStyle(color: Colors.white70))
-                  : LongPressDraggable<model.StorageContainer>(
-                      data: container,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: UldChip(container),
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.2,
-                        child: UldChip(container),
-                      ),
-                      child: UldChip(container),
+                  : Stack(
+                      children: [
+                        Positioned(
+                          top: 2,
+                          left: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              label,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: LongPressDraggable<model.StorageContainer>(
+                            data: container,
+                            feedback: Material(
+                              color: Colors.transparent,
+                              child: UldChip(container),
+                            ),
+                            childWhenDragging: Opacity(
+                              opacity: 0.2,
+                              child: UldChip(container),
+                            ),
+                            child: UldChip(container),
+                          ),
+                        ),
+                      ],
                     ),
             ),
           );
