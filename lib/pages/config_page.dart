@@ -10,6 +10,7 @@ import '../providers/tug_provider.dart';
 import '../providers/train_provider.dart';
 import '../providers/ball_deck_provider.dart';
 import '../providers/storage_provider.dart';
+import '../providers/transfer_queue_provider.dart';
 import '../models/aircraft.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
@@ -620,6 +621,35 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               );
             },
             child: const Text('Apply'),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: Colors.grey[900],
+                  title: const Text(
+                    'Are you sure you want to permanently delete all ULDs in the Transfer Bin?',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ref.read(transferQueueProvider.notifier).clear();
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Yes'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Empty Transfer Bin'),
           ),
         ],
       ),

@@ -29,6 +29,7 @@ void main() async {
   await Hive.openBox('trainBox');
   await Hive.openBox('tugBox');
   await Hive.openBox('planeBox');
+  await Hive.openBox('transferBox');
 
   runApp(const ProviderScope(child: RampLoaderApp()));
 }
