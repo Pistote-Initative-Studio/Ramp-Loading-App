@@ -17,6 +17,7 @@ import '../models/container.dart' as model;
 import '../models/uld_type.dart';
 import '../widgets/color_picker_dialog.dart';
 import '../widgets/color_palette.dart';
+import '../utils/duplicate_checker.dart';
 
 class TugDraft {
   String id;
@@ -211,6 +212,29 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             actions: [
               TextButton(
                 onPressed: () {
+                  if (name.trim().isEmpty) return;
+
+                  final location = findUldLocation(ref, name);
+                  if (location != null) {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        backgroundColor: Colors.black,
+                        content: Text(
+                          'That ULD already exists at $location',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Ok'),
+                          ),
+                        ],
+                      ),
+                    );
+                    return;
+                  }
+
                   final container = model.StorageContainer(
                     id: UniqueKey().toString(),
                     uld: name,
