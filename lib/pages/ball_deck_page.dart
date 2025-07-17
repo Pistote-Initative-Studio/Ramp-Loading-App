@@ -10,6 +10,7 @@ import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
 import '../utils/uld_mover.dart';
+import '../utils/duplicate_checker.dart';
 
 class BallDeckPage extends ConsumerWidget {
   const BallDeckPage({super.key});
@@ -231,22 +232,41 @@ class _AddUldDialogState extends ConsumerState<AddUldDialog> {
         TextButton(
           onPressed: () {
             final label = _idController.text.trim();
-            if (label.isNotEmpty) {
-              ref
-                  .read(ballDeckProvider.notifier)
-                  .addUld(
-                    model.StorageContainer(
-                      id: UniqueKey().toString(),
-                      uld: label,
-                      type: SizeEnum.Custom,
-                      size: SizeEnum.PAG_88x125,
-                      weightKg: 0,
-                      hasDangerousGoods: false,
-                      colorIndex: 0,
+            if (label.isEmpty) return;
+
+            final location = findUldLocation(ref, label);
+            if (location != null) {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  backgroundColor: Colors.black,
+                  content: Text(
+                    'That ULD already exists at $location',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Ok'),
                     ),
-                  );
-              Navigator.pop(context);
+                  ],
+                ),
+              );
+              return;
             }
+
+            ref.read(ballDeckProvider.notifier).addUld(
+                  model.StorageContainer(
+                    id: UniqueKey().toString(),
+                    uld: label,
+                    type: SizeEnum.Custom,
+                    size: SizeEnum.PAG_88x125,
+                    weightKg: 0,
+                    hasDangerousGoods: false,
+                    colorIndex: 0,
+                  ),
+                );
+            Navigator.pop(context);
           },
           child: const Text('Add', style: TextStyle(color: Colors.amber)),
         ),
