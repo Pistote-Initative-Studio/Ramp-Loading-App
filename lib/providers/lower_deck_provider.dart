@@ -29,12 +29,12 @@ final lowerDeckProvider =
 
 class LowerDeckNotifier extends StateNotifier<LowerDeckState> {
   LowerDeckNotifier()
-    : super(
-        LowerDeckState(
-          inboundSlots: List.filled(11, null),
-          outboundSlots: List.filled(11, null),
-        ),
-      );
+      : super(
+          LowerDeckState(
+            inboundSlots: List.filled(15, null),
+            outboundSlots: List.filled(15, null),
+          ),
+        );
 
   void loadFromPlane(Plane plane) {
     state = LowerDeckState(

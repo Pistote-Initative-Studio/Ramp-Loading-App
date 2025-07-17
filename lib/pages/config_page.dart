@@ -72,7 +72,11 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       LoadingSequence('D', 'D', List.generate(13, (i) => i)),
       LoadingSequence('E', 'E', List.generate(12, (i) => i)),
     ]),
-    Aircraft('B763', 'Boeing 767-300 Freighter', [], []),
+    Aircraft('B763', 'Boeing 767-300 Freighter', [], [
+      LoadingSequence('A', 'A', List.generate(17, (i) => i)),
+      LoadingSequence('B', 'B', List.generate(13, (i) => i)),
+      LoadingSequence('C', 'C', List.generate(24, (i) => i)),
+    ]),
     Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
   ];
 
@@ -304,8 +308,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       outboundSequenceLabel: cfg.label,
       outboundSequenceOrder: cfg.order,
       outboundSlots: List.filled(cfg.order.length, null),
-      lowerInboundSlots: List.filled(11, null),
-      lowerOutboundSlots: List.filled(11, null),
+      lowerInboundSlots: List.filled(15, null),
+      lowerOutboundSlots: List.filled(15, null),
     );
     final existing = ref.read(planesProvider).any((p) => p.id == plane.id);
     if (existing) {
