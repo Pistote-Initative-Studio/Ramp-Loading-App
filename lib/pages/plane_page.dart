@@ -510,6 +510,7 @@ class PlanePage extends ConsumerWidget {
 
   String _slotLabel(LoadingSequence sequence, int index) {
     if (sequence.order.length >= 21 && index == 20) return 'A11';
+    if (sequence.order.length >= 21 && index == 18) return '10L';
     if (index == 18) return 'A10';
     final row = index ~/ 2 + 1;
     final side = index % 2 == 0 ? 'L' : 'R';
