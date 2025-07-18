@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
-import 'transfer_queue_provider.dart';
+import '../managers/transfer_bin_manager.dart';
 
 final storageProvider =
     StateNotifierProvider<StorageNotifier, List<StorageContainer?>>((ref) {
@@ -12,7 +12,7 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
 
   void setSize(
     int count, {
-    TransferQueueNotifier? transferQueue,
+    TransferBinManager? transferBin,
   }) {
     final oldState = state;
     final newState = List<StorageContainer?>.filled(count, null);
@@ -20,11 +20,11 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
     for (int i = 0; i < copyLen; i++) {
       newState[i] = oldState[i];
     }
-    if (count < oldState.length && transferQueue != null) {
+    if (count < oldState.length && transferBin != null) {
       for (int i = count; i < oldState.length; i++) {
         final c = oldState[i];
         if (c != null) {
-          transferQueue.add(c);
+          transferBin.addULD(c);
           // Debug print
           // ignore: avoid_print
           print('ULD ${c.uld} moved to Transfer Bin due to slot removal');

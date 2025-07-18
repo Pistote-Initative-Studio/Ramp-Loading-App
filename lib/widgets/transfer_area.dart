@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/container.dart';
-import '../providers/transfer_queue_provider.dart';
+import '../providers/transfer_bin_provider.dart';
 import '../utils/uld_mover.dart';
 
 class TransferArea extends ConsumerWidget {
@@ -10,14 +10,15 @@ class TransferArea extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final queue = ref.watch(transferQueueProvider);
+    final manager = ref.watch(transferBinProvider);
+    final queue = manager.ulds;
     return DragTarget<StorageContainer>(
       onAccept: (c) {
         // Remove the ULD from wherever it currently resides
         removeFromAll(ref, c);
 
         // Finally add it to the transfer queue
-        ref.read(transferQueueProvider.notifier).add(c);
+        ref.read(transferBinProvider).addULD(c);
       },
       builder: (context, cand, rej) {
         final isActive = cand.isNotEmpty;

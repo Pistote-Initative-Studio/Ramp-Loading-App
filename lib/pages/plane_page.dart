@@ -14,7 +14,6 @@ import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
-import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 
 final List<Aircraft> aircraftList = [
@@ -212,7 +211,6 @@ class PlanePage extends ConsumerWidget {
                         : _buildLayout(context, ref, sequence, isOutbound),
                   ),
           ),
-          const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
     );

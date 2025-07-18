@@ -9,7 +9,6 @@ import '../widgets/uld_chip.dart';
 import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
-import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 import '../utils/duplicate_checker.dart';
 

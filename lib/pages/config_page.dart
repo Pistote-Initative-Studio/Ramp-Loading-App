@@ -10,7 +10,7 @@ import '../providers/tug_provider.dart';
 import '../providers/train_provider.dart';
 import '../providers/ball_deck_provider.dart';
 import '../providers/storage_provider.dart';
-import '../providers/transfer_queue_provider.dart';
+import '../providers/transfer_bin_provider.dart';
 import '../models/aircraft.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
@@ -330,7 +330,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
     final inboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
     final outboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
-    final transfer = ref.read(transferQueueProvider.notifier);
+    final transfer = ref.read(transferBinProvider);
 
     if (existing != null) {
       final oldInbound = existing.inboundSlots;
@@ -345,7 +345,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         for (int i = inboundSlots.length; i < oldInbound.length; i++) {
           final c = oldInbound[i];
           if (c != null) {
-            transfer.add(c);
+            transfer.addULD(c);
             // Debug print for removed inbound ULDs
             // ignore: avoid_print
             print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
@@ -363,7 +363,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         for (int i = outboundSlots.length; i < oldOutbound.length; i++) {
           final c = oldOutbound[i];
           if (c != null) {
-            transfer.add(c);
+            transfer.addULD(c);
             // Debug print for removed outbound ULDs
             // ignore: avoid_print
             print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
@@ -547,7 +547,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             onPressed: (ballDeckCount != ballDeck.slots.length)
                 ? () {
                     final transfer =
-                        ref.read(transferQueueProvider.notifier);
+                        ref.read(transferBinProvider);
                     // Move ULDs from removed slots to the Transfer Bin
                     if (ballDeckCount < ballDeck.slots.length) {
                       for (int i = ballDeckCount;
@@ -555,7 +555,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                           i++) {
                         final c = ballDeck.slots[i];
                         if (c != null) {
-                          transfer.add(c);
+                          transfer.addULD(c);
                         }
                       }
                     }
@@ -705,7 +705,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             onPressed: () {
               ref.read(storageProvider.notifier).setSize(
                     storageCount,
-                    transferQueue: ref.read(transferQueueProvider.notifier),
+                    transferBin: ref.read(transferBinProvider),
                   );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Storage slot count updated')),
@@ -731,7 +731,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        ref.read(transferQueueProvider.notifier).clear();
+                        ref.read(transferBinProvider).clear();
                         Navigator.pop(ctx);
                       },
                       child: const Text('Yes'),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
-import '../providers/transfer_queue_provider.dart';
+import '../providers/transfer_bin_provider.dart';
 
 Future<void> showTransferMenu({
   required BuildContext context,
@@ -9,7 +9,7 @@ Future<void> showTransferMenu({
   required Offset position,
   required void Function(StorageContainer) onSelected,
 }) async {
-  final queue = ref.read(transferQueueProvider);
+  final queue = ref.read(transferBinProvider).ulds;
   if (queue.isEmpty) return;
   final selected = await showMenu<StorageContainer>(
     context: context,
@@ -28,7 +28,7 @@ Future<void> showTransferMenu({
     ],
   );
   if (selected != null) {
-    ref.read(transferQueueProvider.notifier).remove(selected);
+    ref.read(transferBinProvider).removeULD(selected);
     onSelected(selected);
   }
 }

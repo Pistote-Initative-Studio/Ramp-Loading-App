@@ -6,7 +6,6 @@ import '../providers/storage_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
-import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 
 class StoragePage extends ConsumerWidget {
@@ -92,7 +91,6 @@ class StoragePage extends ConsumerWidget {
         ),
         ),
           ),
-        const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
     );
