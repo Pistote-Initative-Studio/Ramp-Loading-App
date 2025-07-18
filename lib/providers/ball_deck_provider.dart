@@ -18,8 +18,18 @@ class BallDeckState {
 }
 
 class BallDeckNotifier extends StateNotifier<BallDeckState> {
-  BallDeckNotifier()
-    : super(BallDeckState(slots: List.filled(7, null), overflow: []));
+  final Box _box = Hive.box('ballDeckBox');
+  static const String stateKey = 'state';
+
+  BallDeckNotifier() : super(_loadInitial(Hive.box('ballDeckBox')));
+
+  static BallDeckState _loadInitial(Box box) {
+    final stored = box.get(stateKey);
+    if (stored != null && stored is BallDeckState) {
+      return stored;
+    }
+    return BallDeckState(slots: List.filled(7, null), overflow: []);
+  }
 
   void setSlotCount(
     int count, {
@@ -168,7 +178,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   }
 
   void _saveState() {
-    // You can implement Hive or other persistence logic here
+    _box.put(stateKey, state);
   }
 }
 
