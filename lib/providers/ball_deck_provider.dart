@@ -15,6 +15,16 @@ class BallDeckState {
   final List<StorageContainer> overflow;
 
   BallDeckState({required this.slots, required this.overflow});
+
+  BallDeckState copyWith({
+    List<StorageContainer?>? slots,
+    List<StorageContainer>? overflow,
+  }) {
+    return BallDeckState(
+      slots: slots ?? this.slots,
+      overflow: overflow ?? this.overflow,
+    );
+  }
 }
 
 class BallDeckNotifier extends StateNotifier<BallDeckState> {
