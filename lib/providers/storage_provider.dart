@@ -8,58 +8,47 @@ final storageProvider =
     });
 
 class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
-  StorageNotifier() : super(List.filled(20, null)); // Default 20 spaces
+  static const _pageId = 'storage';
+  final TransferBinManager _manager = TransferBinManager.instance;
 
-  void setSize(
-    int count, {
-    TransferBinManager? transferBin,
-  }) {
-    final oldState = state;
-    final newState = List<StorageContainer?>.filled(count, null);
-    final copyLen = count < oldState.length ? count : oldState.length;
-    for (int i = 0; i < copyLen; i++) {
-      newState[i] = oldState[i];
-    }
-    if (count < oldState.length && transferBin != null) {
-      for (int i = count; i < oldState.length; i++) {
-        final c = oldState[i];
-        if (c != null) {
-          transferBin.addULD(c);
-          // Debug print
-          // ignore: avoid_print
-          print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-        }
-      }
-    }
-    state = newState;
+  StorageNotifier() : super(TransferBinManager.instance.getSlots(_pageId)) {
+    _manager.addListener(_update);
   }
 
-  void placeContainer(int idx, StorageContainer? container) {
-    final newState = [...state];
-    newState[idx] = container;
-    state = newState;
+  void _update() {
+    state = _manager.getSlots(_pageId);
   }
 
-  // ✅ NEW: Add a ULD to the first available slot
+  @override
+  void dispose() {
+    _manager.removeListener(_update);
+    super.dispose();
+  }
+
+  void setSize(int count) {
+    _manager.validateSlots(_pageId, count);
+    _manager.setSlotCount(_pageId, count);
+    state = _manager.getSlots(_pageId);
+  }
+
+  void placeContainer(int idx, StorageContainer container) {
+    _manager.placeULDInSlot(_pageId, idx, container);
+    state = _manager.getSlots(_pageId);
+  }
+
   void addUld(StorageContainer container) {
-    final newState = [...state];
-    for (int i = 0; i < newState.length; i++) {
-      if (newState[i] == null) {
-        newState[i] = container;
-        state = newState;
+    final slots = _manager.getSlots(_pageId);
+    for (int i = 0; i < slots.length; i++) {
+      if (slots[i] == null) {
+        placeContainer(i, container);
         return;
       }
     }
-    newState.add(container); // Overflow behavior (expand list)
-    state = newState;
+    placeContainer(slots.length, container);
   }
 
-  // Remove a ULD from storage by id
   void removeContainer(StorageContainer container) {
-    final newState = [
-      for (final slot in state)
-        if (slot?.id == container.id) null else slot
-    ];
-    state = newState;
+    _manager.removeULDFromSlots(container);
+    state = _manager.getSlots(_pageId);
   }
 }

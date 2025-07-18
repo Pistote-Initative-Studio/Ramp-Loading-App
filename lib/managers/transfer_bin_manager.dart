@@ -3,30 +3,111 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/container.dart';
 
+/// Identifier used to persist placed ULDs across the app.
+class _SlotKey {
+  final String pageId;
+  const _SlotKey(this.pageId);
+
+  @override
+  String toString() => pageId;
+}
+
 class TransferBinManager extends ChangeNotifier {
   static final TransferBinManager _instance = TransferBinManager._internal();
   static TransferBinManager get instance => _instance;
 
   final Box _box = Hive.box('transferBox');
-  static const String _key = 'queue';
+  static const String _queueKey = 'queue';
+  static const String _slotKey = 'slots';
 
   List<StorageContainer> _ulds = [];
+  final Map<String, List<StorageContainer?>> _slots = {};
 
   TransferBinManager._internal() {
-    final stored = _box.get(_key);
-    if (stored != null && stored is List) {
-      _ulds = List<StorageContainer>.from(stored);
+    final storedQueue = _box.get(_queueKey);
+    if (storedQueue != null && storedQueue is List) {
+      _ulds = List<StorageContainer>.from(storedQueue);
+    }
+    final storedSlots = _box.get(_slotKey);
+    if (storedSlots != null && storedSlots is Map) {
+      for (final entry in storedSlots.entries) {
+        _slots[entry.key] = List<StorageContainer?>.from(entry.value as List);
+      }
     }
   }
 
   List<StorageContainer> get ulds => List.unmodifiable(_ulds);
 
   void _save() {
-    _box.put(_key, _ulds);
+    _box.put(_queueKey, _ulds);
+    _box.put(_slotKey, _slots);
   }
 
   void addULD(StorageContainer uld) {
     _ulds = [..._ulds, uld];
+    _save();
+    notifyListeners();
+  }
+
+  List<StorageContainer?> getSlots(String pageId) {
+    return _slots[pageId] ?? const [];
+  }
+
+  void setSlotCount(String pageId, int count) {
+    final existing = _slots[pageId] ?? [];
+    final newList = List<StorageContainer?>.filled(count, null);
+    final copy = count < existing.length ? count : existing.length;
+    for (int i = 0; i < copy; i++) {
+      newList[i] = existing[i];
+    }
+    _slots[pageId] = newList;
+    _save();
+    notifyListeners();
+  }
+
+  void placeULDInSlot(String pageId, int index, StorageContainer container) {
+    removeULDFromSlots(container);
+    removeULD(container);
+
+    final slots = _slots[pageId] ?? [];
+    while (slots.length <= index) {
+      slots.add(null);
+    }
+    slots[index] = container;
+    _slots[pageId] = slots;
+    _save();
+    notifyListeners();
+  }
+
+  void removeULDFromSlots(StorageContainer container) {
+    for (final entry in _slots.entries) {
+      final updated = [
+        for (final slot in entry.value)
+          if (slot?.id == container.id) null else slot
+      ];
+      _slots[entry.key] = updated;
+    }
+    _save();
+    notifyListeners();
+  }
+
+  /// Validates the slot list for [pageId]. Any ULDs beyond [newSlotCount]
+  /// are moved into the transfer bin. This should be called whenever the
+  /// number of slots on a page changes.
+  void validateSlots(String pageId, int newSlotCount) {
+    final slots = _slots[pageId];
+    if (slots == null) return;
+    if (newSlotCount >= slots.length) return;
+
+    debugPrint('VALIDATE $pageId -> $newSlotCount');
+    for (int i = newSlotCount; i < slots.length; i++) {
+      final c = slots[i];
+      if (c != null) {
+        debugPrint('Moving ${c.uld} from $pageId index $i to transfer bin');
+        addULD(c);
+      }
+    }
+    _slots[pageId] = slots.sublist(0, newSlotCount);
     _save();
     notifyListeners();
   }

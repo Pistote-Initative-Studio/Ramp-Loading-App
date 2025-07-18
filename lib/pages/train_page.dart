@@ -6,6 +6,7 @@ import '../models/tug.dart';
 import '../models/container.dart' as model;
 import '../models/container.dart';
 import '../providers/transfer_bin_provider.dart';
+import '../managers/transfer_bin_manager.dart';
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
@@ -108,7 +109,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
 
   void _applyChanges() {
     final current = ref.read(trainProvider);
-    final transfer = ref.read(transferBinProvider);
+    final transfer = TransferBinManager.instance;
 
     final newTrains = _drafts.asMap().entries.map((e) {
       final draft = e.value;
@@ -124,16 +125,9 @@ class _TrainPageState extends ConsumerState<TrainPage>
         return Dolly(i + 1, load: load);
       });
       if (existing != null && draft.dollyCount < existing.dollys.length) {
-        for (int i = draft.dollyCount; i < existing.dollys.length; i++) {
-          final c = existing.dollys[i].load;
-          if (c != null) {
-            transfer.addULD(c);
-            // Debug print for removed train dolly ULDs
-            // ignore: avoid_print
-            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-          }
-        }
+        transfer.validateSlots('train_${draft.id}', draft.dollyCount);
       }
+      transfer.setSlotCount('train_${draft.id}', draft.dollyCount);
       return Train(
         id: draft.id,
         label: 'Train ${e.key + 1}',
@@ -146,19 +140,14 @@ class _TrainPageState extends ConsumerState<TrainPage>
     for (final t in current) {
       final exists = newTrains.any((nt) => nt.id == t.id);
       if (!exists) {
-        for (final d in t.dollys) {
-          final c = d.load;
-          if (c != null) {
-            transfer.addULD(c);
-            // Debug print for removed train
-            // ignore: avoid_print
-            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-          }
-        }
+        transfer.validateSlots('train_${t.id}', 0);
       }
     }
 
     ref.read(trainProvider.notifier).setTrains(newTrains);
+    for (final t in newTrains) {
+      transfer.setSlotCount('train_${t.id}', t.dollyCount);
+    }
   }
 
   @override

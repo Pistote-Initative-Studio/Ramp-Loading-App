@@ -11,6 +11,7 @@ import '../providers/train_provider.dart';
 import '../providers/ball_deck_provider.dart';
 import '../providers/storage_provider.dart';
 import '../providers/transfer_bin_provider.dart';
+import '../managers/transfer_bin_manager.dart';
 import '../models/aircraft.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
@@ -330,7 +331,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
     final inboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
     final outboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
-    final transfer = ref.read(transferBinProvider);
+    final transfer = TransferBinManager.instance;
 
     if (existing != null) {
       final oldInbound = existing.inboundSlots;
@@ -342,15 +343,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         inboundSlots[i] = oldInbound[i];
       }
       if (inboundSlots.length < oldInbound.length) {
-        for (int i = inboundSlots.length; i < oldInbound.length; i++) {
-          final c = oldInbound[i];
-          if (c != null) {
-            transfer.addULD(c);
-            // Debug print for removed inbound ULDs
-            // ignore: avoid_print
-            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-          }
-        }
+        transfer.validateSlots('plane_${draft.id}_in', inboundSlots.length);
       }
 
       final copyOut = outboundSlots.length < oldOutbound.length
@@ -360,15 +353,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         outboundSlots[i] = oldOutbound[i];
       }
       if (outboundSlots.length < oldOutbound.length) {
-        for (int i = outboundSlots.length; i < oldOutbound.length; i++) {
-          final c = oldOutbound[i];
-          if (c != null) {
-            transfer.addULD(c);
-            // Debug print for removed outbound ULDs
-            // ignore: avoid_print
-            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-          }
-        }
+        transfer.validateSlots('plane_${draft.id}_out', outboundSlots.length);
       }
     }
 
