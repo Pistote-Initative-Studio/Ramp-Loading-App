@@ -20,6 +20,8 @@ class BallDeckState {
 class BallDeckNotifier extends StateNotifier<BallDeckState> {
   final Box _box = Hive.box('ballDeckBox');
   static const String stateKey = 'state';
+  static const String _slotsId = 'ballDeck';
+  static const String _overflowId = 'ballDeckOverflow';
 
   BallDeckNotifier() : super(_loadInitial(Hive.box('ballDeckBox')));
 
@@ -28,152 +30,83 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     if (stored != null && stored is BallDeckState) {
       return stored;
     }
+    final manager = TransferBinManager.instance;
+    final slots = manager.getSlots(_slotsId);
+    final overflow = manager.getSlots(_overflowId).cast<StorageContainer>();
+    if (slots.isNotEmpty || overflow.isNotEmpty) {
+      return BallDeckState(slots: slots, overflow: overflow);
+    }
     return BallDeckState(slots: List.filled(7, null), overflow: []);
   }
 
   void setSlotCount(
-    int count, {
-    TransferBinManager? transferBin,
-  }) {
-    final oldSlots = state.slots;
-    final updatedSlots = List<StorageContainer?>.filled(count, null);
-    final copyLen = count < oldSlots.length ? count : oldSlots.length;
-    for (int i = 0; i < copyLen; i++) {
-      updatedSlots[i] = oldSlots[i];
-    }
-    if (count < oldSlots.length && transferBin != null) {
-      for (int i = count; i < oldSlots.length; i++) {
-        final c = oldSlots[i];
-        if (c != null) {
-          transferBin.addULD(c);
-          // Debug print to verify transfer logic
-          // ignore: avoid_print
-          print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
-        }
-      }
-    }
-    state = BallDeckState(slots: updatedSlots, overflow: state.overflow);
+    int count,
+  ) {
+    final manager = TransferBinManager.instance;
+    manager.validateSlots(_slotsId, count);
+    manager.setSlotCount(_slotsId, count);
+    state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
   }
 
   void addUld(StorageContainer container) {
-    final newSlots = [...state.slots];
-    final newOverflow = [...state.overflow];
-
-    for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i] == null) {
-        newSlots[i] = container;
-        state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    final manager = TransferBinManager.instance;
+    final slots = manager.getSlots(_slotsId);
+    for (int i = 0; i < slots.length; i++) {
+      if (slots[i] == null) {
+        manager.placeULDInSlot(_slotsId, i, container);
+        state = state.copyWith(slots: manager.getSlots(_slotsId));
         _saveState();
         return;
       }
     }
-
-    for (int i = 0; i < newOverflow.length; i++) {
-      if (newOverflow[i].uld.startsWith('EMPTY_SLOT')) {
-        newOverflow[i] = container;
-        state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    final overflow = manager.getSlots(_overflowId);
+    for (int i = 0; i < overflow.length; i++) {
+      if (overflow[i] == null ||
+          (overflow[i] is StorageContainer &&
+              (overflow[i] as StorageContainer).uld.startsWith('EMPTY_SLOT'))) {
+        manager.placeULDInSlot(_overflowId, i, container);
+        state = state.copyWith(
+          slots: manager.getSlots(_slotsId),
+          overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+        );
         _saveState();
         return;
       }
     }
-
-    newOverflow.add(container);
-    state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    manager.placeULDInSlot(_overflowId, overflow.length, container);
+    state = state.copyWith(
+      slots: manager.getSlots(_slotsId),
+      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+    );
     _saveState();
   }
 
   void placeContainer(int slotIdx, StorageContainer container) {
-    final newSlots = [...state.slots];
-    final newOverflow = [...state.overflow];
-
-    for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i]?.id == container.id) newSlots[i] = null;
-    }
-
-    for (int i = 0; i < newOverflow.length; i++) {
-      if (newOverflow[i].id == container.id) {
-        newOverflow[i] = StorageContainer(
-          id: 'EMPTY_SLOT_$i',
-          uld: 'EMPTY_SLOT_$i',
-          type: SizeEnum.EMPTY,
-          size: SizeEnum.PAG_88x125,
-          weightKg: 0,
-          hasDangerousGoods: false,
-          colorIndex: null,
-        );
-      }
-    }
-
-    newSlots[slotIdx] = container;
-    state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    final manager = TransferBinManager.instance;
+    manager.placeULDInSlot(_slotsId, slotIdx, container);
+    state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
   }
 
   void placeIntoOverflowAt(StorageContainer container, int index) {
-    final newSlots = [...state.slots];
-    final newOverflow = [...state.overflow];
-
-    for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i]?.id == container.id) newSlots[i] = null;
-    }
-
-    for (int i = 0; i < newOverflow.length; i++) {
-      if (newOverflow[i].id == container.id) {
-        newOverflow[i] = StorageContainer(
-          id: 'EMPTY_SLOT_$i',
-          uld: 'EMPTY_SLOT_$i',
-          type: SizeEnum.EMPTY,
-          size: SizeEnum.PAG_88x125,
-          weightKg: 0,
-          hasDangerousGoods: false,
-          colorIndex: null,
-        );
-      }
-    }
-
-    while (newOverflow.length <= index) {
-      newOverflow.add(
-        StorageContainer(
-          id: 'EMPTY_SLOT_${newOverflow.length}',
-          uld: 'EMPTY_SLOT_${newOverflow.length}',
-          type: SizeEnum.EMPTY,
-          size: SizeEnum.PAG_88x125,
-          weightKg: 0,
-          hasDangerousGoods: false,
-          colorIndex: null,
-        ),
-      );
-    }
-
-    newOverflow[index] = container;
-    state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    final manager = TransferBinManager.instance;
+    manager.placeULDInSlot(_overflowId, index, container);
+    state = state.copyWith(
+      slots: manager.getSlots(_slotsId),
+      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+    );
     _saveState();
   }
 
   // Remove a ULD from anywhere on the ball deck or overflow by id
   void removeContainer(StorageContainer container) {
-    final newSlots = [
-      for (final slot in state.slots)
-        if (slot?.id == container.id) null else slot
-    ];
-
-    final newOverflow = [
-      for (int i = 0; i < state.overflow.length; i++)
-        state.overflow[i].id == container.id
-            ? StorageContainer(
-                id: 'EMPTY_SLOT_$i',
-                uld: 'EMPTY_SLOT_$i',
-                type: SizeEnum.EMPTY,
-                size: SizeEnum.PAG_88x125,
-                weightKg: 0,
-                hasDangerousGoods: false,
-                colorIndex: null,
-              )
-            : state.overflow[i]
-    ];
-
-    state = BallDeckState(slots: newSlots, overflow: newOverflow);
+    final manager = TransferBinManager.instance;
+    manager.removeULDFromSlots(container);
+    state = state.copyWith(
+      slots: manager.getSlots(_slotsId),
+      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+    );
     _saveState();
   }
 
