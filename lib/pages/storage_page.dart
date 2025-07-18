@@ -31,9 +31,9 @@ class StoragePage extends ConsumerWidget {
             child: SingleChildScrollView(
               padding: slotPadding,
               child: Wrap(
-          spacing: slotSpacing,
-          runSpacing: slotRunSpacing,
-          children: List.generate(slots.length, (index) {
+                spacing: slotSpacing,
+                runSpacing: slotRunSpacing,
+                children: List.generate(slots.length, (index) {
             final container = slots[index];
 
             return GestureDetector(
@@ -90,8 +90,9 @@ class StoragePage extends ConsumerWidget {
             );
           }),
         ),
+        ),
           ),
-          const SizedBox(height: 60, child: TransferArea()),
+        const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
     );
