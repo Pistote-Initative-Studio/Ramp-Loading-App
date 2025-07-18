@@ -126,7 +126,12 @@ class _TrainPageState extends ConsumerState<TrainPage>
       if (existing != null && draft.dollyCount < existing.dollys.length) {
         for (int i = draft.dollyCount; i < existing.dollys.length; i++) {
           final c = existing.dollys[i].load;
-          if (c != null) transfer.add(c);
+          if (c != null) {
+            transfer.add(c);
+            // Debug print for removed train dolly ULDs
+            // ignore: avoid_print
+            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+          }
         }
       }
       return Train(
@@ -143,7 +148,12 @@ class _TrainPageState extends ConsumerState<TrainPage>
       if (!exists) {
         for (final d in t.dollys) {
           final c = d.load;
-          if (c != null) transfer.add(c);
+          if (c != null) {
+            transfer.add(c);
+            // Debug print for removed train
+            // ignore: avoid_print
+            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+          }
         }
       }
     }

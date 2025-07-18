@@ -14,6 +14,7 @@ import '../models/plane.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 
 final List<Aircraft> aircraftList = [
@@ -193,21 +194,27 @@ class PlanePage extends ConsumerWidget {
             ),
         ],
       ),
-      body:
-          aircraft == null || sequence == null
-              ? const Center(
-                child: Text(
-                  'Please select a plane and configuration using the dropdowns above.',
-                  style: TextStyle(color: Colors.white70),
-                  textAlign: TextAlign.center,
-                ),
-              )
-              : SingleChildScrollView(
-                padding: slotPadding,
-                child: isLowerDeck
-                    ? _buildLowerDeckLayout(context, ref, isOutbound)
-                    : _buildLayout(context, ref, sequence, isOutbound),
-              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: aircraft == null || sequence == null
+                ? const Center(
+                    child: Text(
+                      'Please select a plane and configuration using the dropdowns above.',
+                      style: TextStyle(color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: slotPadding,
+                    child: isLowerDeck
+                        ? _buildLowerDeckLayout(context, ref, isOutbound)
+                        : _buildLayout(context, ref, sequence, isOutbound),
+                  ),
+          ),
+          const SizedBox(height: 60, child: TransferArea()),
+        ],
+      ),
     );
   }
 
