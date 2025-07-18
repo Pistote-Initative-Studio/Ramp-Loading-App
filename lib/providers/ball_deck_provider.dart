@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
 import '../models/aircraft.dart';
+import 'transfer_queue_provider.dart';
 
 part 'ball_deck_provider.g.dart';
 
@@ -20,9 +21,23 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   BallDeckNotifier()
     : super(BallDeckState(slots: List.filled(7, null), overflow: []));
 
-  void setSlotCount(int count) {
+  void setSlotCount(
+    int count, {
+    TransferQueueNotifier? transferQueue,
+  }) {
+    final oldSlots = state.slots;
     final updatedSlots = List<StorageContainer?>.filled(count, null);
-    state = BallDeckState(slots: updatedSlots, overflow: []);
+    final copyLen = count < oldSlots.length ? count : oldSlots.length;
+    for (int i = 0; i < copyLen; i++) {
+      updatedSlots[i] = oldSlots[i];
+    }
+    if (count < oldSlots.length && transferQueue != null) {
+      for (int i = count; i < oldSlots.length; i++) {
+        final c = oldSlots[i];
+        if (c != null) transferQueue.add(c);
+      }
+    }
+    state = BallDeckState(slots: updatedSlots, overflow: state.overflow);
     _saveState();
   }
 

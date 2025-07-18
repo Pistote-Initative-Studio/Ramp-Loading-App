@@ -4,6 +4,8 @@ import 'package:dotted_border/dotted_border.dart';
 import '../models/train.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
+import '../models/container.dart';
+import '../providers/transfer_queue_provider.dart';
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
@@ -105,14 +107,47 @@ class _TrainPageState extends ConsumerState<TrainPage>
   }
 
   void _applyChanges() {
+    final current = ref.read(trainProvider);
+    final transfer = ref.read(transferQueueProvider.notifier);
+
     final newTrains = _drafts.asMap().entries.map((e) {
-      return Train.withAutoDolly(
-        id: e.value.id,
+      final draft = e.value;
+      Train? existing;
+      try {
+        existing = current.firstWhere((t) => t.id == draft.id);
+      } catch (_) {}
+      final dollys = List<Dolly>.generate(draft.dollyCount, (i) {
+        StorageContainer? load;
+        if (existing != null && i < existing.dollys.length) {
+          load = existing.dollys[i].load;
+        }
+        return Dolly(i + 1, load: load);
+      });
+      if (existing != null && draft.dollyCount < existing.dollys.length) {
+        for (int i = draft.dollyCount; i < existing.dollys.length; i++) {
+          final c = existing.dollys[i].load;
+          if (c != null) transfer.add(c);
+        }
+      }
+      return Train(
+        id: draft.id,
         label: 'Train ${e.key + 1}',
-        dollyCount: e.value.dollyCount,
-        colorIndex: 0,
+        dollyCount: draft.dollyCount,
+        dollys: dollys,
+        colorIndex: existing?.colorIndex ?? 0,
       );
     }).toList();
+
+    for (final t in current) {
+      final exists = newTrains.any((nt) => nt.id == t.id);
+      if (!exists) {
+        for (final d in t.dollys) {
+          final c = d.load;
+          if (c != null) transfer.add(c);
+        }
+      }
+    }
+
     ref.read(trainProvider.notifier).setTrains(newTrains);
   }
 
