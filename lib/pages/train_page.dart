@@ -5,7 +5,7 @@ import '../models/train.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
 import '../models/container.dart';
-import '../providers/transfer_queue_provider.dart';
+import '../providers/transfer_bin_provider.dart';
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
 import '../widgets/uld_chip.dart';
@@ -108,7 +108,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
 
   void _applyChanges() {
     final current = ref.read(trainProvider);
-    final transfer = ref.read(transferQueueProvider.notifier);
+    final transfer = ref.read(transferBinProvider);
 
     final newTrains = _drafts.asMap().entries.map((e) {
       final draft = e.value;
@@ -127,7 +127,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
         for (int i = draft.dollyCount; i < existing.dollys.length; i++) {
           final c = existing.dollys[i].load;
           if (c != null) {
-            transfer.add(c);
+            transfer.addULD(c);
             // Debug print for removed train dolly ULDs
             // ignore: avoid_print
             print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
@@ -149,7 +149,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
         for (final d in t.dollys) {
           final c = d.load;
           if (c != null) {
-            transfer.add(c);
+            transfer.addULD(c);
             // Debug print for removed train
             // ignore: avoid_print
             print('ULD ${c.uld} moved to Transfer Bin due to slot removal');

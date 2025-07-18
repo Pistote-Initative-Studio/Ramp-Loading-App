@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
 import '../models/aircraft.dart';
-import 'transfer_queue_provider.dart';
+import '../managers/transfer_bin_manager.dart';
 
 part 'ball_deck_provider.g.dart';
 
@@ -33,7 +33,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
 
   void setSlotCount(
     int count, {
-    TransferQueueNotifier? transferQueue,
+    TransferBinManager? transferBin,
   }) {
     final oldSlots = state.slots;
     final updatedSlots = List<StorageContainer?>.filled(count, null);
@@ -41,11 +41,11 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     for (int i = 0; i < copyLen; i++) {
       updatedSlots[i] = oldSlots[i];
     }
-    if (count < oldSlots.length && transferQueue != null) {
+    if (count < oldSlots.length && transferBin != null) {
       for (int i = count; i < oldSlots.length; i++) {
         final c = oldSlots[i];
         if (c != null) {
-          transferQueue.add(c);
+          transferBin.addULD(c);
           // Debug print to verify transfer logic
           // ignore: avoid_print
           print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
