@@ -9,6 +9,7 @@ import '../widgets/uld_chip.dart';
 import '../models/aircraft.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 import '../utils/duplicate_checker.dart';
 
@@ -22,10 +23,13 @@ class BallDeckPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Ball Deck')),
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: slotPadding,
-        child: SingleChildScrollView(
-          child: Column(
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: slotPadding,
+              child: SingleChildScrollView(
+                child: Column(
             children: List.generate(ballDeck.slots.length, (index) {
               final slotUld = ballDeck.slots[index];
               final overflowStartIndex = index * 2;
@@ -63,8 +67,12 @@ class BallDeckPage extends ConsumerWidget {
                 ),
               );
             }),
+                ),
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 60, child: TransferArea()),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

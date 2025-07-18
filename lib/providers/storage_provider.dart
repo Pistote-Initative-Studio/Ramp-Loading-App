@@ -23,7 +23,12 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
     if (count < oldState.length && transferQueue != null) {
       for (int i = count; i < oldState.length; i++) {
         final c = oldState[i];
-        if (c != null) transferQueue.add(c);
+        if (c != null) {
+          transferQueue.add(c);
+          // Debug print
+          // ignore: avoid_print
+          print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+        }
       }
     }
     state = newState;

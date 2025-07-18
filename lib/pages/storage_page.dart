@@ -6,6 +6,7 @@ import '../providers/storage_provider.dart';
 import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
+import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
 
 class StoragePage extends ConsumerWidget {
@@ -24,9 +25,12 @@ class StoragePage extends ConsumerWidget {
         title: const Text('Storage'),
         backgroundColor: Colors.black,
       ),
-      body: SingleChildScrollView(
-        padding: slotPadding,
-        child: Wrap(
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: slotPadding,
+              child: Wrap(
           spacing: slotSpacing,
           runSpacing: slotRunSpacing,
           children: List.generate(slots.length, (index) {
@@ -86,6 +90,9 @@ class StoragePage extends ConsumerWidget {
             );
           }),
         ),
+          ),
+          const SizedBox(height: 60, child: TransferArea()),
+        ],
       ),
     );
   }

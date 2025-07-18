@@ -34,7 +34,12 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     if (count < oldSlots.length && transferQueue != null) {
       for (int i = count; i < oldSlots.length; i++) {
         final c = oldSlots[i];
-        if (c != null) transferQueue.add(c);
+        if (c != null) {
+          transferQueue.add(c);
+          // Debug print to verify transfer logic
+          // ignore: avoid_print
+          print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+        }
       }
     }
     state = BallDeckState(slots: updatedSlots, overflow: state.overflow);

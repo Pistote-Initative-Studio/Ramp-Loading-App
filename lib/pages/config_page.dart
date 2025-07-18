@@ -344,7 +344,12 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       if (inboundSlots.length < oldInbound.length) {
         for (int i = inboundSlots.length; i < oldInbound.length; i++) {
           final c = oldInbound[i];
-          if (c != null) transfer.add(c);
+          if (c != null) {
+            transfer.add(c);
+            // Debug print for removed inbound ULDs
+            // ignore: avoid_print
+            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+          }
         }
       }
 
@@ -357,7 +362,12 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       if (outboundSlots.length < oldOutbound.length) {
         for (int i = outboundSlots.length; i < oldOutbound.length; i++) {
           final c = oldOutbound[i];
-          if (c != null) transfer.add(c);
+          if (c != null) {
+            transfer.add(c);
+            // Debug print for removed outbound ULDs
+            // ignore: avoid_print
+            print('ULD ${c.uld} moved to Transfer Bin due to slot removal');
+          }
         }
       }
     }
