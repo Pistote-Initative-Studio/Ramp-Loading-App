@@ -521,7 +521,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             style: TextStyle(color: Colors.white),
           ),
           Slider(
-            value: ballDeckCount.toDouble(),
+            value: ballDeckCount.toDouble().clamp(1, 25),
             min: 1,
             max: 25,
             divisions: 24,
@@ -594,7 +594,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           Slider(
-            value: tugCount.toDouble(),
+            value: tugCount.toDouble().clamp(0, 25),
             min: 0,
             max: 25,
             divisions: 25,
@@ -679,7 +679,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           const SizedBox(height: 32),
           const Text('🏬 Storage Slots', style: TextStyle(color: Colors.white)),
           Slider(
-            value: storageCount.toDouble(),
+            value: storageCount.toDouble().clamp(0, 50),
             min: 0,
             max: 50,
             divisions: 50,

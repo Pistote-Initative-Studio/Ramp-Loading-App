@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'models/container.dart' as model;
+import 'models/size_enum_adapter.dart';
 import 'models/train.dart';
 import 'models/tug.dart';
 import 'models/plane.dart';
@@ -18,6 +19,7 @@ void main() async {
   await Hive.initFlutter();
 
   // Register Hive adapters
+  Hive.registerAdapter(SizeEnumAdapter());
   Hive.registerAdapter(model.StorageContainerAdapter());
   Hive.registerAdapter(DollyAdapter());
   Hive.registerAdapter(TrainAdapter());
