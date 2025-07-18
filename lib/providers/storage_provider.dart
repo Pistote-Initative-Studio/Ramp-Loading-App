@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
+import 'transfer_queue_provider.dart';
 
 final storageProvider =
     StateNotifierProvider<StorageNotifier, List<StorageContainer?>>((ref) {
@@ -9,11 +10,23 @@ final storageProvider =
 class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
   StorageNotifier() : super(List.filled(20, null)); // Default 20 spaces
 
-  void setSize(int count) {
-    state = List.generate(
-      count,
-      (index) => index < state.length ? state[index] : null,
-    );
+  void setSize(
+    int count, {
+    TransferQueueNotifier? transferQueue,
+  }) {
+    final oldState = state;
+    final newState = List<StorageContainer?>.filled(count, null);
+    final copyLen = count < oldState.length ? count : oldState.length;
+    for (int i = 0; i < copyLen; i++) {
+      newState[i] = oldState[i];
+    }
+    if (count < oldState.length && transferQueue != null) {
+      for (int i = count; i < oldState.length; i++) {
+        final c = oldState[i];
+        if (c != null) transferQueue.add(c);
+      }
+    }
+    state = newState;
   }
 
   void placeContainer(int idx, StorageContainer? container) {

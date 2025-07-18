@@ -14,6 +14,7 @@ import '../providers/transfer_queue_provider.dart';
 import '../models/aircraft.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
+import '../models/container.dart';
 import '../models/uld_type.dart';
 import '../widgets/color_picker_dialog.dart';
 import '../widgets/color_palette.dart';
@@ -321,21 +322,62 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     if (ac == null) return;
     cfg = cfg ?? (ac.configs.isNotEmpty ? ac.configs.first : null);
     if (cfg == null) return;
+    final planes = ref.read(planesProvider);
+    Plane? existing;
+    try {
+      existing = planes.firstWhere((p) => p.id == draft.id);
+    } catch (_) {}
+
+    final inboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
+    final outboundSlots = List<StorageContainer?>.filled(cfg.order.length, null);
+    final transfer = ref.read(transferQueueProvider.notifier);
+
+    if (existing != null) {
+      final oldInbound = existing.inboundSlots;
+      final oldOutbound = existing.outboundSlots;
+      final copyIn = inboundSlots.length < oldInbound.length
+          ? inboundSlots.length
+          : oldInbound.length;
+      for (int i = 0; i < copyIn; i++) {
+        inboundSlots[i] = oldInbound[i];
+      }
+      if (inboundSlots.length < oldInbound.length) {
+        for (int i = inboundSlots.length; i < oldInbound.length; i++) {
+          final c = oldInbound[i];
+          if (c != null) transfer.add(c);
+        }
+      }
+
+      final copyOut = outboundSlots.length < oldOutbound.length
+          ? outboundSlots.length
+          : oldOutbound.length;
+      for (int i = 0; i < copyOut; i++) {
+        outboundSlots[i] = oldOutbound[i];
+      }
+      if (outboundSlots.length < oldOutbound.length) {
+        for (int i = outboundSlots.length; i < oldOutbound.length; i++) {
+          final c = oldOutbound[i];
+          if (c != null) transfer.add(c);
+        }
+      }
+    }
+
     final plane = Plane(
       id: draft.id,
       name: draft.nameController.text,
       aircraftTypeCode: ac.typeCode,
       inboundSequenceLabel: cfg.label,
       inboundSequenceOrder: cfg.order,
-      inboundSlots: List.filled(cfg.order.length, null),
+      inboundSlots: inboundSlots,
       outboundSequenceLabel: cfg.label,
       outboundSequenceOrder: cfg.order,
-      outboundSlots: List.filled(cfg.order.length, null),
-      lowerInboundSlots: List.filled(15, null),
-      lowerOutboundSlots: List.filled(15, null),
+      outboundSlots: outboundSlots,
+      lowerInboundSlots:
+          existing?.lowerInboundSlots ?? List.filled(15, null),
+      lowerOutboundSlots:
+          existing?.lowerOutboundSlots ?? List.filled(15, null),
     );
-    final existing = ref.read(planesProvider).any((p) => p.id == plane.id);
-    if (existing) {
+    if (existing != null) {
       ref.read(planesProvider.notifier).updatePlane(plane);
     } else {
       ref.read(planesProvider.notifier).addPlane(plane);
@@ -497,7 +539,11 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                     ? () {
                       ref
                           .read(ballDeckProvider.notifier)
-                          .setSlotCount(ballDeckCount);
+                          .setSlotCount(
+                            ballDeckCount,
+                            transferQueue:
+                                ref.read(transferQueueProvider.notifier),
+                          );
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Ball Deck slot count updated'),
@@ -637,7 +683,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              ref.read(storageProvider.notifier).setSize(storageCount);
+              ref.read(storageProvider.notifier).setSize(
+                    storageCount,
+                    transferQueue: ref.read(transferQueueProvider.notifier),
+                  );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Storage slot count updated')),
               );
