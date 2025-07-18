@@ -688,10 +688,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              ref.read(storageProvider.notifier).setSize(
-                    storageCount,
-                    transferBin: ref.read(transferBinProvider),
-                  );
+              ref.read(storageProvider.notifier).setSize(storageCount);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Storage slot count updated')),
               );
