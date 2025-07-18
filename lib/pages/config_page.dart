@@ -544,23 +544,33 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             onChanged: (value) => setState(() => ballDeckCount = value.toInt()),
           ),
           ElevatedButton(
-            onPressed:
-                (ballDeckCount != ballDeck.slots.length)
-                    ? () {
-                      ref
-                          .read(ballDeckProvider.notifier)
-                          .setSlotCount(
-                            ballDeckCount,
-                            transferQueue:
-                                ref.read(transferQueueProvider.notifier),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Ball Deck slot count updated'),
-                        ),
-                      );
+            onPressed: (ballDeckCount != ballDeck.slots.length)
+                ? () {
+                    final transfer =
+                        ref.read(transferQueueProvider.notifier);
+                    // Move ULDs from removed slots to the Transfer Bin
+                    if (ballDeckCount < ballDeck.slots.length) {
+                      for (int i = ballDeckCount;
+                          i < ballDeck.slots.length;
+                          i++) {
+                        final c = ballDeck.slots[i];
+                        if (c != null) {
+                          transfer.add(c);
+                        }
+                      }
                     }
-                    : null,
+
+                    ref
+                        .read(ballDeckProvider.notifier)
+                        .setSlotCount(ballDeckCount);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ball Deck slot count updated'),
+                      ),
+                    );
+                  }
+                : null,
             child: const Text('Apply'),
           ),
           const SizedBox(height: 24),

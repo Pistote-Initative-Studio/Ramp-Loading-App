@@ -71,7 +71,6 @@ class BallDeckPage extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
       floatingActionButton: FloatingActionButton(
