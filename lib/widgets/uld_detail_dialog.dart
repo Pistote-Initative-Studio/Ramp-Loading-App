@@ -63,6 +63,7 @@ class UldDetailDialog extends StatelessWidget {
                   }
                   container.hasDangerousGoods = checked ?? false;
                   onUpdate();
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                 },
               ),

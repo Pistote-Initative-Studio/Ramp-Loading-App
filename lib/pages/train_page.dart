@@ -4,8 +4,6 @@ import 'package:dotted_border/dotted_border.dart';
 import '../models/train.dart';
 import '../models/tug.dart';
 import '../models/container.dart' as model;
-import '../models/container.dart';
-import '../providers/transfer_bin_provider.dart';
 import '../managers/transfer_bin_manager.dart';
 import '../providers/train_provider.dart';
 import '../providers/tug_provider.dart';
@@ -118,7 +116,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
         existing = current.firstWhere((t) => t.id == draft.id);
       } catch (_) {}
       final dollys = List<Dolly>.generate(draft.dollyCount, (i) {
-        StorageContainer? load;
+        model.StorageContainer? load;
         if (existing != null && i < existing.dollys.length) {
           load = existing.dollys[i].load;
         }
@@ -328,7 +326,8 @@ class _TrainPageState extends ConsumerState<TrainPage>
                   )
               : null,
           child: DragTarget<model.StorageContainer>(
-            onAccept: (c) {
+            onAcceptWithDetails: (details) {
+              final c = details.data;
               removeFromAll(ref, c);
               ref.read(trainProvider.notifier).assignUldToDolly(
                     trainId: train.id,

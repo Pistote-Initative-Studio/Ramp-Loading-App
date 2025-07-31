@@ -101,9 +101,12 @@ class BallDeckPage extends ConsumerWidget {
               )
           : null,
       child: DragTarget<model.StorageContainer>(
-        onAccept: (container) {
+        onAcceptWithDetails: (details) {
+          final container = details.data;
           removeFromAll(ref, container);
-          ref.read(ballDeckProvider.notifier).placeContainer(slotIdx, container);
+          ref
+              .read(ballDeckProvider.notifier)
+              .placeContainer(slotIdx, container);
         },
         builder: (context, candidateData, rejectedData) {
           return Container(
@@ -159,7 +162,8 @@ class BallDeckPage extends ConsumerWidget {
               )
           : null,
       child: DragTarget<model.StorageContainer>(
-        onAccept: (container) {
+        onAcceptWithDetails: (details) {
+          final container = details.data;
           removeFromAll(ref, container);
           ref
               .read(ballDeckProvider.notifier)

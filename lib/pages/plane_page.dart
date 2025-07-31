@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -527,7 +526,8 @@ class PlanePage extends ConsumerWidget {
               )
           : null,
       child: DragTarget<model.StorageContainer>(
-        onAccept: (c) {
+        onAcceptWithDetails: (details) {
+          final c = details.data;
           removeFromAll(ref, c);
           ref
               .read(lowerDeckProvider.notifier)
@@ -535,16 +535,16 @@ class PlanePage extends ConsumerWidget {
           ref
               .read(planeProvider.notifier)
               .placeLowerDeckContainer(index, c, outbound: outbound);
-        final planeId = ref.watch(selectedPlaneIdProvider);
-        if (planeId != null) {
-          final planes = ref.read(planesProvider);
-          try {
-            final plane = planes.firstWhere((p) => p.id == planeId);
-            final updated = ref.read(planeProvider.notifier).exportPlane(plane);
-            ref.read(planesProvider.notifier).updatePlane(updated);
-          } catch (_) {}
-        }
-      },
+          final planeId = ref.watch(selectedPlaneIdProvider);
+          if (planeId != null) {
+            final planes = ref.read(planesProvider);
+            try {
+              final plane = planes.firstWhere((p) => p.id == planeId);
+              final updated = ref.read(planeProvider.notifier).exportPlane(plane);
+              ref.read(planesProvider.notifier).updatePlane(updated);
+            } catch (_) {}
+          }
+        },
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return DottedBorder(
@@ -568,7 +568,7 @@ class PlanePage extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 4, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withAlpha((0.6 * 255).toInt()),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -676,7 +676,8 @@ class PlanePage extends ConsumerWidget {
               )
           : null,
       child: DragTarget<model.StorageContainer>(
-        onAccept: (c) {
+        onAcceptWithDetails: (details) {
+          final c = details.data;
           removeFromAll(ref, c);
           ref
               .read(planeProvider.notifier)
@@ -714,7 +715,7 @@ class PlanePage extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: Colors.black.withAlpha((0.6 * 255).toInt()),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(

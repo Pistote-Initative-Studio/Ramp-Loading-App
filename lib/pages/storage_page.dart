@@ -16,7 +16,7 @@ class StoragePage extends ConsumerWidget {
     final slots = ref.watch(storageProvider);
 
     // Debug: log slot count
-    print('🟡 STORAGE SLOT COUNT: ${slots.length}');
+    // print('🟡 STORAGE SLOT COUNT: ${slots.length}');
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -49,7 +49,8 @@ class StoragePage extends ConsumerWidget {
                       )
                   : null,
               child: DragTarget<model.StorageContainer>(
-                onAccept: (c) {
+                onAcceptWithDetails: (details) {
+                  final c = details.data;
                   removeFromAll(ref, c);
                   ref.read(storageProvider.notifier).placeContainer(index, c);
                 },
