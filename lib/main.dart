@@ -63,12 +63,20 @@ class HomeNav extends StatefulWidget {
   const HomeNav({super.key});
 
   @override
-  State<HomeNav> createState() => _HomeNavState();
+  State<HomeNav> createState() => HomeNavState();
 }
 
-class _HomeNavState extends State<HomeNav> {
+class HomeNavState extends State<HomeNav> {
   final PageController _controller = PageController();
   int page = 0;
+
+  final tabs = const [
+    ConfigPage(),
+    BallDeckPage(),
+    TrainPage(),
+    PlanePage(),
+    StoragePage(),
+  ];
 
   void jumpToPage(int index) {
     setState(() {
@@ -83,13 +91,7 @@ class _HomeNavState extends State<HomeNav> {
       body: PageView(
         controller: _controller,
         physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          ConfigPage(), // index 0
-          BallDeckPage(), // index 1
-          TrainPage(), // index 2
-          PlanePage(), // index 3
-          StoragePage(), // index 4
-        ],
+        children: tabs,
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,

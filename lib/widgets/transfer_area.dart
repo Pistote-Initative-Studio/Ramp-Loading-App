@@ -13,7 +13,8 @@ class TransferArea extends ConsumerWidget {
     final manager = ref.watch(transferBinProvider);
     final queue = manager.ulds;
     return DragTarget<StorageContainer>(
-      onAccept: (c) {
+      onAcceptWithDetails: (details) {
+        final c = details.data;
         // Remove the ULD from wherever it currently resides
         removeFromAll(ref, c);
 
