@@ -15,4 +15,11 @@ class LoadConfig {
   });
 }
 
-final configProvider = StateProvider<LoadConfig?>((ref) => null);
+final configProvider = StateProvider<LoadConfig?>((ref) {
+  // Default placeholder configuration to ensure provider is non-null.
+  return LoadConfig(
+    aircraft: const Aircraft('UNKNOWN', 'Unknown Aircraft', [], []),
+    allowedUlds: const [],
+    trains: const [],
+  );
+});
