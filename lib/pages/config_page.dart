@@ -11,9 +11,9 @@ class ConfigPage extends ConsumerWidget {
     final config = ref.watch(configProvider);
     if (config == null) {
       debugPrint('ConfigPage early exit: config is null');
-      return const Scaffold(
-        appBar: AppBar(title: Text('Config')),
-        body: Center(child: Text('No configuration loaded')),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Config')),
+        body: const Center(child: Text('No configuration loaded')),
       );
     }
 
