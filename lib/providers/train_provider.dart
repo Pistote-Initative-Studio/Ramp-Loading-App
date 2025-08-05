@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/train.dart';
 import '../models/container.dart';
+import '../managers/transfer_bin_manager.dart';
 
 final trainProvider = StateNotifierProvider<TrainNotifier, List<Train>>((ref) {
   return TrainNotifier();
@@ -34,6 +35,16 @@ class TrainNotifier extends StateNotifier<List<Train>> {
       }
 
       state = loaded;
+      final transfer = TransferBinManager.instance;
+      for (final train in loaded) {
+        transfer.setSlotCount('train_${train.id}', train.dollys.length);
+        for (int i = 0; i < train.dollys.length; i++) {
+          final load = train.dollys[i].load;
+          if (load != null) {
+            transfer.placeULDInSlot('train_${train.id}', i, load);
+          }
+        }
+      }
     }
 
     _box.put(lastOpenedKey, today);
@@ -47,16 +58,28 @@ class TrainNotifier extends StateNotifier<List<Train>> {
   void setTrains(List<Train> trains) {
     state = trains;
     _saveState();
+    final transfer = TransferBinManager.instance;
+    for (final t in trains) {
+      transfer.setSlotCount('train_${t.id}', t.dollys.length);
+      for (int i = 0; i < t.dollys.length; i++) {
+        final load = t.dollys[i].load;
+        if (load != null) {
+          transfer.placeULDInSlot('train_${t.id}', i, load);
+        }
+      }
+    }
   }
 
   void addTrain(Train train) {
     state = [...state, train];
     _saveState();
+    TransferBinManager.instance.setSlotCount('train_${train.id}', train.dollys.length);
   }
 
   void removeTrain(String id) {
     state = state.where((t) => t.id != id).toList();
     _saveState();
+    TransferBinManager.instance.validateSlots('train_$id', 0);
   }
 
   void updateTrain(Train updated) {
@@ -65,6 +88,14 @@ class TrainNotifier extends StateNotifier<List<Train>> {
         if (t.id == updated.id) updated else t,
     ];
     _saveState();
+    final transfer = TransferBinManager.instance;
+    transfer.setSlotCount('train_${updated.id}', updated.dollys.length);
+    for (int i = 0; i < updated.dollys.length; i++) {
+      final load = updated.dollys[i].load;
+      if (load != null) {
+        transfer.placeULDInSlot('train_${updated.id}', i, load);
+      }
+    }
   }
 
   void assignUldToDolly({
@@ -78,6 +109,7 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     train.dollys[dollyIdx] = Dolly(dolly.idx, load: container);
     state = trains;
     _saveState();
+    TransferBinManager.instance.placeULDInSlot('train_$trainId', dollyIdx, container);
   }
 
   void clearUldFromDolly({
@@ -87,9 +119,13 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     final trains = [...state];
     final train = trains.firstWhere((t) => t.id == trainId);
     final dolly = train.dollys[dollyIdx];
+    final load = dolly.load;
     train.dollys[dollyIdx] = Dolly(dolly.idx);
     state = trains;
     _saveState();
+    if (load != null) {
+      TransferBinManager.instance.removeULDFromSlots(load);
+    }
   }
 
   // Remove a ULD from any train dolly by id
@@ -109,6 +145,7 @@ class TrainNotifier extends StateNotifier<List<Train>> {
       state = trains;
       _saveState();
     }
+    TransferBinManager.instance.removeULDFromSlots(container);
   }
 
   /// Adds a [container] to the first available dolly starting from the first
@@ -121,6 +158,8 @@ class TrainNotifier extends StateNotifier<List<Train>> {
           train.dollys[i] = Dolly(train.dollys[i].idx, load: container);
           state = trains;
           _saveState();
+          TransferBinManager.instance
+              .placeULDInSlot('train_${train.id}', i, container);
           return;
         }
       }
