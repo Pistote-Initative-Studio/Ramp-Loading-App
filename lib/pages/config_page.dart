@@ -433,111 +433,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Text('Allowed ULD Types'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _allowedUlds
-                    .map(
-                      (type) => ElevatedButton(
-                        onPressed: () => _promptForUldDetails(type),
-                        child: Text(type),
-                      ),
-                    )
-                    .toList(),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _customUldController,
-                      decoration: const InputDecoration(labelText: 'Add ULD Type'),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    onPressed: _addCustomUld,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text('Train Configuration'),
-              const SizedBox(height: 8),
-              _trainDrafts.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No tugs configured'),
-                    )
-                  : Column(
-                      children: List.generate(_trainDrafts.length, (i) {
-                        final draft = _trainDrafts[i];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (_) => ColorPickerDialog(
-                                          onColorPicked: (c) {
-                                            setState(() {
-                                              draft.colorIndex =
-                                                  rampColors.indexOf(c);
-                                            });
-                                          },
-                                        ),
-                                      );
-                                    },
-                                    child: CircleAvatar(
-                                      backgroundColor: rampColors[
-                                          draft.colorIndex %
-                                              rampColors.length],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: draft.labelController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'Tug Label'),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon:
-                                        const Icon(Icons.close, color: Colors.red),
-                                    onPressed: () => _deleteTrain(i),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => _applyTrain(i),
-                                    child: const Text('Apply'),
-                                  ),
-                                ],
-                              ),
-                              Slider(
-                                value: draft.dollyCount.toDouble(),
-                                min: 0,
-                                max: 10,
-                                divisions: 10,
-                                label: '${draft.dollyCount}',
-                                onChanged: (v) => setState(
-                                    () => draft.dollyCount = v.toInt()),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ),
-              ElevatedButton(
-                onPressed: _addTrain,
-                child: const Text('Add Tug'),
-              ),
-              const SizedBox(height: 24),
-              const Text('Planes'),
+              const Text('Plane Configuration'),
               _planeDrafts.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
@@ -642,7 +538,111 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                 child: const Text('Add Plane'),
               ),
               const SizedBox(height: 24),
-              const Text('Storage Slots'),
+              const Text('ULD Type Configuration'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _allowedUlds
+                    .map(
+                      (type) => ElevatedButton(
+                        onPressed: () => _promptForUldDetails(type),
+                        child: Text(type),
+                      ),
+                    )
+                    .toList(),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _customUldController,
+                      decoration: const InputDecoration(labelText: 'Add ULD Type'),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    onPressed: _addCustomUld,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text('Tug/Train Configuration'),
+              const SizedBox(height: 8),
+              _trainDrafts.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('No tugs configured'),
+                    )
+                  : Column(
+                      children: List.generate(_trainDrafts.length, (i) {
+                        final draft = _trainDrafts[i];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => ColorPickerDialog(
+                                          onColorPicked: (c) {
+                                            setState(() {
+                                              draft.colorIndex =
+                                                  rampColors.indexOf(c);
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    child: CircleAvatar(
+                                      backgroundColor: rampColors[
+                                          draft.colorIndex %
+                                              rampColors.length],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: draft.labelController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'Tug Label'),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon:
+                                        const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () => _deleteTrain(i),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => _applyTrain(i),
+                                    child: const Text('Apply'),
+                                  ),
+                                ],
+                              ),
+                              Slider(
+                                value: draft.dollyCount.toDouble(),
+                                min: 0,
+                                max: 10,
+                                divisions: 10,
+                                label: '${draft.dollyCount}',
+                                onChanged: (v) => setState(
+                                    () => draft.dollyCount = v.toInt()),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+              ElevatedButton(
+                onPressed: _addTrain,
+                child: const Text('Add Tug'),
+              ),
+              const SizedBox(height: 24),
+              const Text('Storage Configuration'),
               Slider(
                 value: _storageCount.toDouble(),
                 min: 0,
