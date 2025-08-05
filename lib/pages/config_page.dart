@@ -371,8 +371,12 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   void _applyPlane(int index) {
     final draft = _planeDrafts[index];
     final ac = draft.aircraft;
-    final cfg = draft.config;
-    if (ac == null || cfg == null) return;
+    if (ac == null) return;
+
+    final cfg = draft.config ??
+        (ac.configs.isNotEmpty
+            ? ac.configs.first
+            : LoadingSequence('', '', []));
 
     final plane = Plane(
       id: draft.id,
@@ -442,7 +446,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   : Column(
                       children: List.generate(_planeDrafts.length, (i) {
                         final draft = _planeDrafts[i];
-                        final cfgs = draft.aircraft?.configs ?? [];
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Column(
@@ -463,10 +466,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                                     onPressed: () => _deletePlane(i),
                                   ),
                                   ElevatedButton(
-                                    onPressed:
-                                        draft.aircraft != null && draft.config != null
-                                            ? () => _applyPlane(i)
-                                            : null,
+                                    onPressed: draft.aircraft != null
+                                        ? () => _applyPlane(i)
+                                        : null,
                                     child: const Text('Apply'),
                                   ),
                                 ],
@@ -487,28 +489,13 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     draft.aircraft = value;
-                                    draft.config = null;
+                                    draft.config =
+                                        value != null && value.configs.isNotEmpty
+                                            ? value.configs.first
+                                            : null;
                                   });
                                 },
                               ),
-                              if (cfgs.isNotEmpty)
-                                DropdownButton<LoadingSequence>(
-                                  value: draft.config,
-                                  isExpanded: true,
-                                  dropdownColor: Colors.black,
-                                  hint: const Text('Select Configuration'),
-                                  items: cfgs
-                                      .map(
-                                        (cfg) => DropdownMenuItem(
-                                          value: cfg,
-                                          child: Text(cfg.label),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (cfg) {
-                                    setState(() => draft.config = cfg);
-                                  },
-                                ),
                             ],
                           ),
                         );
@@ -521,18 +508,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               const SizedBox(height: 24),
               const Text('ULD Type Configuration'),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _allowedUlds
-                    .map(
-                      (type) => ElevatedButton(
-                        onPressed: () => _promptForUldDetails(type),
-                        child: Text(type),
-                      ),
-                    )
-                    .toList(),
-              ),
               Row(
                 children: [
                   Expanded(
