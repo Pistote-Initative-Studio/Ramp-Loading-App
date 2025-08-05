@@ -120,6 +120,9 @@ class TransferBinManager extends ChangeNotifier {
 
   void clear() {
     _ulds = [];
+    for (final entry in _slots.entries) {
+      _slots[entry.key] = List<StorageContainer?>.filled(entry.value.length, null);
+    }
     _save();
     notifyListeners();
   }

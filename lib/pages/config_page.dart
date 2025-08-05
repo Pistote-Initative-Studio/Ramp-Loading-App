@@ -659,6 +659,39 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                 },
                 child: const Text('Apply'),
               ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Empty Transfer Bin'),
+                      content: const Text(
+                          'Are you sure you want to permanently delete all ULDs in the transfer bin?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    TransferBinManager.instance.clear();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Transfer bin emptied')),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Empty Transfer Bin'),
+              ),
             ],
           ),
         );
