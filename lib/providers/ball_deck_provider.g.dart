@@ -18,7 +18,7 @@ class BallDeckStateAdapter extends TypeAdapter<BallDeckState> {
     };
     return BallDeckState(
       slots: (fields[0] as List).cast<StorageContainer?>(),
-      overflow: (fields[1] as List).cast<StorageContainer>(),
+      overflow: (fields[1] as List).cast<StorageContainer?>(),
     );
   }
 
