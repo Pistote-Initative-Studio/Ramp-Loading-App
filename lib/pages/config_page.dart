@@ -527,6 +527,28 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                 ],
               ),
               const SizedBox(height: 24),
+              const Text('Ball Deck Configuration'),
+              Slider(
+                value: _ballDeckCount.toDouble(),
+                min: 0,
+                max: 30,
+                divisions: 30,
+                label: '$_ballDeckCount',
+                onChanged: (v) => setState(() => _ballDeckCount = v.toInt()),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  ref
+                      .read(ballDeckProvider.notifier)
+                      .setSlotCount(_ballDeckCount);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Ball deck slot count updated')),
+                  );
+                },
+                child: const Text('Apply'),
+              ),
+              const SizedBox(height: 24),
               const Text('Tug/Train Configuration'),
               const SizedBox(height: 8),
               _trainDrafts.isEmpty
@@ -591,29 +613,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               ElevatedButton(
                 onPressed: _addTrain,
                 child: const Text('Add Tug'),
-              ),
-              const SizedBox(height: 24),
-              const Text('Ball Deck Configuration'),
-              const Text('Number of Ball Deck Slots'),
-              Slider(
-                value: _ballDeckCount.toDouble(),
-                min: 0,
-                max: 30,
-                divisions: 30,
-                label: '$_ballDeckCount',
-                onChanged: (v) => setState(() => _ballDeckCount = v.toInt()),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  ref
-                      .read(ballDeckProvider.notifier)
-                      .setSlotCount(_ballDeckCount);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Ball deck slot count updated')),
-                  );
-                },
-                child: const Text('Apply'),
               ),
               const SizedBox(height: 24),
               const Text('Storage Configuration'),
