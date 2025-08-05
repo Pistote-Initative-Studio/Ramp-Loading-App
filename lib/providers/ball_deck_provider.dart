@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
-import '../models/aircraft.dart';
 import '../managers/transfer_bin_manager.dart';
 
 part 'ball_deck_provider.g.dart';
@@ -12,13 +11,13 @@ class BallDeckState {
   final List<StorageContainer?> slots;
 
   @HiveField(1)
-  final List<StorageContainer> overflow;
+  final List<StorageContainer?> overflow;
 
   BallDeckState({required this.slots, required this.overflow});
 
   BallDeckState copyWith({
     List<StorageContainer?>? slots,
-    List<StorageContainer>? overflow,
+    List<StorageContainer?>? overflow,
   }) {
     return BallDeckState(
       slots: slots ?? this.slots,
@@ -42,7 +41,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     }
     final manager = TransferBinManager.instance;
     final slots = manager.getSlots(_slotsId);
-    final overflow = manager.getSlots(_overflowId).cast<StorageContainer>();
+    final overflow = manager.getSlots(_overflowId);
     if (slots.isNotEmpty || overflow.isNotEmpty) {
       return BallDeckState(slots: slots, overflow: overflow);
     }
@@ -72,13 +71,12 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     }
     final overflow = manager.getSlots(_overflowId);
     for (int i = 0; i < overflow.length; i++) {
-      if (overflow[i] == null ||
-          (overflow[i] is StorageContainer &&
-              (overflow[i] as StorageContainer).uld.startsWith('EMPTY_SLOT'))) {
+      final slot = overflow[i];
+      if (slot == null || slot.uld.startsWith('EMPTY_SLOT')) {
         manager.placeULDInSlot(_overflowId, i, container);
         state = state.copyWith(
           slots: manager.getSlots(_slotsId),
-          overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+          overflow: manager.getSlots(_overflowId),
         );
         _saveState();
         return;
@@ -87,7 +85,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     manager.placeULDInSlot(_overflowId, overflow.length, container);
     state = state.copyWith(
       slots: manager.getSlots(_slotsId),
-      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+      overflow: manager.getSlots(_overflowId),
     );
     _saveState();
   }
@@ -104,7 +102,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     manager.placeULDInSlot(_overflowId, index, container);
     state = state.copyWith(
       slots: manager.getSlots(_slotsId),
-      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+      overflow: manager.getSlots(_overflowId),
     );
     _saveState();
   }
@@ -115,7 +113,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     manager.removeULDFromSlots(container);
     state = state.copyWith(
       slots: manager.getSlots(_slotsId),
-      overflow: manager.getSlots(_overflowId).cast<StorageContainer>(),
+      overflow: manager.getSlots(_overflowId),
     );
     _saveState();
   }

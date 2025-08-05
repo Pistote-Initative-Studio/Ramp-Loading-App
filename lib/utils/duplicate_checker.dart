@@ -19,7 +19,7 @@ String? findUldLocation(WidgetRef ref, String label) {
     if (slot?.uld == label) return 'Ball Deck';
   }
   for (final c in ballDeck.overflow) {
-    if (c.uld == label) return 'Ball Deck';
+    if (c?.uld == label) return 'Ball Deck';
   }
 
   final storage = ref.read(storageProvider);

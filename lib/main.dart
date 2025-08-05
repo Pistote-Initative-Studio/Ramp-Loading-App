@@ -26,6 +26,12 @@ void main() async {
   Hive.registerAdapter(SizeEnumAdapter());
   Hive.registerAdapter(BallDeckStateAdapter());
 
+  // Ensure required Hive boxes are open before the app starts.
+  await Future.wait([
+    Hive.openBox('ballDeckBox'),
+    Hive.openBox('transferBox'),
+  ]);
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
