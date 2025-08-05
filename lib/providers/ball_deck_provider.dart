@@ -60,6 +60,15 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
 
   void addUld(StorageContainer container) {
     final manager = TransferBinManager.instance;
+
+    // Ensure the manager still has the correct number of slots. If the list of
+    // slots has been lost or reset (e.g. returning an empty list), recreate the
+    // slot structure based on the current state so that adding a ULD does not
+    // change the configured slot count.
+    if (manager.getSlots(_slotsId).length != state.slots.length) {
+      manager.setSlotCount(_slotsId, state.slots.length);
+    }
+
     final slots = manager.getSlots(_slotsId);
     for (int i = 0; i < slots.length; i++) {
       if (slots[i] == null) {
