@@ -505,28 +505,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                                         ),
                                       )
                                       .toList(),
-                                  onChanged: (cfg) {
+                              onChanged: (cfg) {
                                     setState(() => draft.config = cfg);
                                   },
-                                ),
-                              if (draft.config != null)
-                                Wrap(
-                                  spacing: 4,
-                                  runSpacing: 4,
-                                  children: draft.config!.order
-                                      .map(
-                                        (o) => Container(
-                                          width: 32,
-                                          height: 32,
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: Colors.white24),
-                                          ),
-                                          child: Text(o.toString()),
-                                        ),
-                                      )
-                                      .toList(),
                                 ),
                             ],
                           ),
@@ -622,15 +603,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                                     child: const Text('Apply'),
                                   ),
                                 ],
-                              ),
-                              Slider(
-                                value: draft.dollyCount.toDouble(),
-                                min: 0,
-                                max: 10,
-                                divisions: 10,
-                                label: '${draft.dollyCount}',
-                                onChanged: (v) => setState(
-                                    () => draft.dollyCount = v.toInt()),
                               ),
                             ],
                           ),
