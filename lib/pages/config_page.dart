@@ -91,14 +91,19 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
   ];
 
+  late Future<void> _initFuture;
+
   /// Ensure all Hive boxes used on this page are opened before the widgets
   /// try to read from them.
   Future<void> _ensureBoxesOpen() async {
     final boxes = [
       'configBox',
       'planeBox',
+      'planesBox',
       'trainBox',
       'tugBox',
+      'tugsBox',
+      'uldBox',
       'ballDeckBox',
       'transferBox',
     ];
@@ -112,45 +117,50 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   @override
   void initState() {
     super.initState();
-    // Populate drafts once providers are available.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _initFuture = _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _ensureBoxesOpen();
+
+    if (Hive.isBoxOpen('configBox')) {
       final box = Hive.box('configBox');
       final storedTypes = box.get('allowedUlds');
       if (storedTypes is List) {
         _allowedUlds = List<String>.from(storedTypes);
       }
+    }
 
-      final trains = ref.read(trainProvider);
-      final tugs = ref.read(tugProvider);
-      final maxLen = trains.length > tugs.length ? trains.length : tugs.length;
-      _trainDrafts = List.generate(maxLen, (i) {
-        final train = i < trains.length ? trains[i] : null;
-        final tug = i < tugs.length ? tugs[i] : null;
-        return _TrainDraft(
-          id: train?.id ?? tug?.id ?? UniqueKey().toString(),
-          label: tug?.label ?? train?.label ?? 'Tug ${i + 1}',
-          colorIndex: tug?.colorIndex ?? train?.colorIndex ?? 0,
-          dollyCount: train?.dollyCount ?? 0,
-        );
-      });
-
-      _storageCount = ref.read(storageProvider).length;
-
-      final planes = ref.read(planesProvider);
-      _planeDrafts = planes.map((p) {
-        final ac = _aircraftList.firstWhere(
-          (a) => a.typeCode == p.aircraftTypeCode,
-          orElse: () => _aircraftList.first,
-        );
-        LoadingSequence? cfg;
-        try {
-          cfg = ac.configs.firstWhere((c) => c.label == p.inboundSequenceLabel);
-        } catch (_) {}
-        return _PlaneDraft(id: p.id, name: p.name, aircraft: ac, config: cfg);
-      }).toList();
-
-      setState(() {});
+    final trains = ref.read(trainProvider);
+    final tugs = ref.read(tugProvider);
+    final maxLen = trains.length > tugs.length ? trains.length : tugs.length;
+    _trainDrafts = List.generate(maxLen, (i) {
+      final train = i < trains.length ? trains[i] : null;
+      final tug = i < tugs.length ? tugs[i] : null;
+      return _TrainDraft(
+        id: train?.id ?? tug?.id ?? UniqueKey().toString(),
+        label: tug?.label ?? train?.label ?? 'Tug ${i + 1}',
+        colorIndex: tug?.colorIndex ?? train?.colorIndex ?? 0,
+        dollyCount: train?.dollyCount ?? 0,
+      );
     });
+
+    _storageCount = ref.read(storageProvider).length;
+
+    final planes = ref.read(planesProvider);
+    _planeDrafts = planes.map((p) {
+      final ac = _aircraftList.firstWhere(
+        (a) => a.typeCode == p.aircraftTypeCode,
+        orElse: () => _aircraftList.first,
+      );
+      LoadingSequence? cfg;
+      try {
+        cfg = ac.configs.firstWhere((c) => c.label == p.inboundSequenceLabel);
+      } catch (_) {}
+      return _PlaneDraft(id: p.id, name: p.name, aircraft: ac, config: cfg);
+    }).toList();
+
+    setState(() {});
   }
 
   @override
@@ -167,7 +177,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
   /// Persist the current list of allowed ULD types.
   void _saveAllowedUlds() {
-    Hive.box('configBox').put('allowedUlds', _allowedUlds);
+    if (Hive.isBoxOpen('configBox')) {
+      Hive.box('configBox').put('allowedUlds', _allowedUlds);
+    }
   }
 
   void _addCustomUld() {
@@ -411,8 +423,11 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _ensureBoxesOpen(),
+      future: _initFuture,
       builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Config')),
           body: ListView(
@@ -449,144 +464,179 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               const SizedBox(height: 24),
               const Text('Train Configuration'),
               const SizedBox(height: 8),
-              Column(
-                children: List.generate(_trainDrafts.length, (i) {
-                  final draft = _trainDrafts[i];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => ColorPickerDialog(
-                                    onColorPicked: (c) {
-                                      setState(() {
-                                        draft.colorIndex = rampColors.indexOf(c);
-                                      });
+              _trainDrafts.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('No tugs configured'),
+                    )
+                  : Column(
+                      children: List.generate(_trainDrafts.length, (i) {
+                        final draft = _trainDrafts[i];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => ColorPickerDialog(
+                                          onColorPicked: (c) {
+                                            setState(() {
+                                              draft.colorIndex =
+                                                  rampColors.indexOf(c);
+                                            });
+                                          },
+                                        ),
+                                      );
                                     },
+                                    child: CircleAvatar(
+                                      backgroundColor: rampColors[
+                                          draft.colorIndex %
+                                              rampColors.length],
+                                    ),
                                   ),
-                                );
-                              },
-                              child: CircleAvatar(
-                                backgroundColor:
-                                    rampColors[draft.colorIndex % rampColors.length],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: draft.labelController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'Tug Label'),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon:
+                                        const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () => _deleteTrain(i),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => _applyTrain(i),
+                                    child: const Text('Apply'),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: draft.labelController,
-                                decoration: const InputDecoration(labelText: 'Tug Label'),
+                              Slider(
+                                value: draft.dollyCount.toDouble(),
+                                min: 0,
+                                max: 10,
+                                divisions: 10,
+                                label: '${draft.dollyCount}',
+                                onChanged: (v) => setState(
+                                    () => draft.dollyCount = v.toInt()),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => _deleteTrain(i),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => _applyTrain(i),
-                              child: const Text('Apply'),
-                            ),
-                          ],
-                        ),
-                        Slider(
-                          value: draft.dollyCount.toDouble(),
-                          min: 0,
-                          max: 10,
-                          divisions: 10,
-                          label: '${draft.dollyCount}',
-                          onChanged: (v) =>
-                              setState(() => draft.dollyCount = v.toInt()),
-                        ),
-                      ],
+                            ],
+                          ),
+                        );
+                      }),
                     ),
-                  );
-                }),
-              ),
               ElevatedButton(
                 onPressed: _addTrain,
                 child: const Text('Add Tug'),
               ),
               const SizedBox(height: 24),
               const Text('Planes'),
-              Column(
-                children: List.generate(_planeDrafts.length, (i) {
-                  final draft = _planeDrafts[i];
-                  final cfgs = draft.aircraft?.configs ?? [];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: draft.nameController,
-                                decoration:
-                                    const InputDecoration(labelText: 'Plane Name'),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => _deletePlane(i),
-                            ),
-                            ElevatedButton(
-                              onPressed: draft.aircraft != null && draft.config != null
-                                  ? () => _applyPlane(i)
-                                  : null,
-                              child: const Text('Apply'),
-                            ),
-                          ],
-                        ),
-                        DropdownButton<Aircraft>(
-                          value: draft.aircraft,
-                          isExpanded: true,
-                          dropdownColor: Colors.black,
-                          hint: const Text('Select Aircraft'),
-                          items: _aircraftList
-                              .map(
-                                (a) => DropdownMenuItem(
-                                  value: a,
-                                  child: Text(a.name),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              draft.aircraft = value;
-                              draft.config = null;
-                            });
-                          },
-                        ),
-                        if (cfgs.isNotEmpty)
-                          DropdownButton<LoadingSequence>(
-                            value: draft.config,
-                            isExpanded: true,
-                            dropdownColor: Colors.black,
-                            hint: const Text('Select Configuration'),
-                            items: cfgs
-                                .map(
-                                  (cfg) => DropdownMenuItem(
-                                    value: cfg,
-                                    child: Text(cfg.label),
+              _planeDrafts.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('No planes configured'),
+                    )
+                  : Column(
+                      children: List.generate(_planeDrafts.length, (i) {
+                        final draft = _planeDrafts[i];
+                        final cfgs = draft.aircraft?.configs ?? [];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: draft.nameController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'Plane Name'),
+                                    ),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (cfg) {
-                              setState(() => draft.config = cfg);
-                            },
+                                  IconButton(
+                                    icon:
+                                        const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () => _deletePlane(i),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed:
+                                        draft.aircraft != null && draft.config != null
+                                            ? () => _applyPlane(i)
+                                            : null,
+                                    child: const Text('Apply'),
+                                  ),
+                                ],
+                              ),
+                              DropdownButton<Aircraft>(
+                                value: draft.aircraft,
+                                isExpanded: true,
+                                dropdownColor: Colors.black,
+                                hint: const Text('Select Aircraft'),
+                                items: _aircraftList
+                                    .map(
+                                      (a) => DropdownMenuItem(
+                                        value: a,
+                                        child: Text(a.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    draft.aircraft = value;
+                                    draft.config = null;
+                                  });
+                                },
+                              ),
+                              if (cfgs.isNotEmpty)
+                                DropdownButton<LoadingSequence>(
+                                  value: draft.config,
+                                  isExpanded: true,
+                                  dropdownColor: Colors.black,
+                                  hint: const Text('Select Configuration'),
+                                  items: cfgs
+                                      .map(
+                                        (cfg) => DropdownMenuItem(
+                                          value: cfg,
+                                          child: Text(cfg.label),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (cfg) {
+                                    setState(() => draft.config = cfg);
+                                  },
+                                ),
+                              if (draft.config != null)
+                                Wrap(
+                                  spacing: 4,
+                                  runSpacing: 4,
+                                  children: draft.config!.order
+                                      .map(
+                                        (o) => Container(
+                                          width: 32,
+                                          height: 32,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: Colors.white24),
+                                          ),
+                                          child: Text(o.toString()),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                            ],
                           ),
-                      ],
+                        );
+                      }),
                     ),
-                  );
-                }),
-              ),
               ElevatedButton(
                 onPressed: _addPlane,
                 child: const Text('Add Plane'),
