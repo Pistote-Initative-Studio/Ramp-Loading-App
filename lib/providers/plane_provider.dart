@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
 import '../models/aircraft.dart';
 import '../models/plane.dart';
+import '../managers/transfer_bin_manager.dart';
 
 class PlaneState {
   final LoadingSequence? inboundSequence;
@@ -100,19 +101,32 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
   }
 
   void selectSequence(LoadingSequence sequence, {required bool outbound}) {
-    final newSlots = List<StorageContainer?>.filled(
-      sequence.order.length,
-      null,
-    );
+    final transfer = TransferBinManager.instance;
+    final current = outbound ? state.outboundSlots : state.inboundSlots;
+    final newCount = sequence.order.length;
+
+    if (newCount < current.length) {
+      for (int i = newCount; i < current.length; i++) {
+        final c = current[i];
+        if (c != null) transfer.addULD(c);
+      }
+    }
+
+    final updated = List<StorageContainer?>.filled(newCount, null);
+    final copy = newCount < current.length ? newCount : current.length;
+    for (int i = 0; i < copy; i++) {
+      updated[i] = current[i];
+    }
+
     if (outbound) {
       state = state.copyWith(
         outboundSequence: sequence,
-        outboundSlots: newSlots,
+        outboundSlots: updated,
       );
     } else {
       state = state.copyWith(
         inboundSequence: sequence,
-        inboundSlots: newSlots,
+        inboundSlots: updated,
       );
     }
   }

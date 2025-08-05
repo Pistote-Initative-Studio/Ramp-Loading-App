@@ -396,9 +396,21 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       lowerOutboundSlots: const [],
     );
 
+    final planes = ref.read(planesProvider);
     final planesNotifier = ref.read(planesProvider.notifier);
-    final existing = ref.read(planesProvider).any((p) => p.id == plane.id);
-    if (existing) {
+    Plane? existing;
+    try {
+      existing = planes.firstWhere((p) => p.id == plane.id);
+    } catch (_) {}
+    if (existing != null) {
+      for (final c in [
+        ...existing.inboundSlots,
+        ...existing.outboundSlots,
+        ...existing.lowerInboundSlots,
+        ...existing.lowerOutboundSlots,
+      ]) {
+        if (c != null) TransferBinManager.instance.addULD(c);
+      }
       planesNotifier.updatePlane(plane);
     } else {
       planesNotifier.addPlane(plane);
@@ -413,6 +425,20 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
   void _deletePlane(int index) {
     final draft = _planeDrafts[index];
+    Plane? existing;
+    try {
+      existing = ref.read(planesProvider).firstWhere((p) => p.id == draft.id);
+    } catch (_) {}
+    if (existing != null) {
+      for (final c in [
+        ...existing.inboundSlots,
+        ...existing.outboundSlots,
+        ...existing.lowerInboundSlots,
+        ...existing.lowerOutboundSlots,
+      ]) {
+        if (c != null) TransferBinManager.instance.addULD(c);
+      }
+    }
     ref.read(planesProvider.notifier).removePlane(draft.id);
     setState(() => _planeDrafts.removeAt(index));
   }
