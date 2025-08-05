@@ -104,19 +104,17 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
       sequence.order.length,
       null,
     );
-    Future.microtask(() {
-      if (outbound) {
-        state = state.copyWith(
-          outboundSequence: sequence,
-          outboundSlots: newSlots,
-        );
-      } else {
-        state = state.copyWith(
-          inboundSequence: sequence,
-          inboundSlots: newSlots,
-        );
-      }
-    });
+    if (outbound) {
+      state = state.copyWith(
+        outboundSequence: sequence,
+        outboundSlots: newSlots,
+      );
+    } else {
+      state = state.copyWith(
+        inboundSequence: sequence,
+        inboundSlots: newSlots,
+      );
+    }
   }
 
   void placeContainer(
