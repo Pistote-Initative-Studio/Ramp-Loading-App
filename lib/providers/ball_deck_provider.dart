@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
 import '../managers/transfer_bin_manager.dart';
@@ -52,10 +53,37 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     int count,
   ) {
     final manager = TransferBinManager.instance;
-    manager.validateSlots(_slotsId, count);
+    final current = List<StorageContainer?>.from(state.slots);
+    int moved = 0;
+
+    if (count < current.length) {
+      for (int i = count; i < current.length; i++) {
+        final c = current[i];
+        if (c != null) {
+          manager.addULD(c);
+          moved++;
+        }
+      }
+    }
+
+    final newSlots = List<StorageContainer?>.filled(count, null);
+    for (int i = 0; i < count && i < current.length; i++) {
+      newSlots[i] = current[i];
+    }
+
+    // Reset manager slots then apply new slot structure.
+    manager.setSlotCount(_slotsId, 0);
     manager.setSlotCount(_slotsId, count);
-    state = state.copyWith(slots: manager.getSlots(_slotsId));
+    for (int i = 0; i < newSlots.length; i++) {
+      final c = newSlots[i];
+      if (c != null) {
+        manager.placeULDInSlot(_slotsId, i, c);
+      }
+    }
+
+    state = state.copyWith(slots: newSlots);
     _saveState();
+    debugPrint('Moved $moved ULDs from ball deck to transfer bin');
   }
 
   void addUld(StorageContainer container) {
