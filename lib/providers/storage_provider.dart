@@ -27,7 +27,7 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
   }
 
   void setSize(int count) {
-    ULDPlacementManager.instance.updateSlotCount('Storage', count);
+    ULDPlacementManager().updateSlotCount('Storage', count);
     _manager.validateSlots(_pageId, count);
     _manager.setSlotCount(_pageId, count);
     state = _manager.getSlots(_pageId);

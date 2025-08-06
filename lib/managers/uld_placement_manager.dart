@@ -4,24 +4,6 @@ import '../models/container.dart';
 
 /// Central manager for ULD placement across all zones in the app.
 class ULDPlacementManager {
-  ULDPlacementManager._internal();
-  static final ULDPlacementManager instance = ULDPlacementManager._internal();
-
-  final Box _box = Hive.box('uldPlacementBox');
-
-  static const String _ballDeckKey = 'ballDeck';
-  static const String _planeDeckKey = 'planeDeck';
-  static const String _trainDeckKey = 'trainDeck';
-  static const String _storageKey = 'storage';
-  static const String _transferKey = 'transferBin';
-
-  /// Zone maps
-  final Map<String, StorageContainer> ballDeck = {};
-  final Map<String, StorageContainer> planeDeck = {};
-  final Map<String, StorageContainer> trainDeck = {};
-  final Map<String, StorageContainer> storage = {};
-  final List<StorageContainer> transferBin = [];
-
   ULDPlacementManager._internal() {
     final Map? bd = _box.get(_ballDeckKey);
     if (bd is Map) ballDeck.addAll(bd.cast<String, StorageContainer>());
@@ -38,6 +20,25 @@ class ULDPlacementManager {
     final List? tb = _box.get(_transferKey);
     if (tb is List) transferBin.addAll(List<StorageContainer>.from(tb));
   }
+
+  static final ULDPlacementManager _instance = ULDPlacementManager._internal();
+
+  factory ULDPlacementManager() => _instance;
+
+  final Box _box = Hive.box('uldPlacementBox');
+
+  static const String _ballDeckKey = 'ballDeck';
+  static const String _planeDeckKey = 'planeDeck';
+  static const String _trainDeckKey = 'trainDeck';
+  static const String _storageKey = 'storage';
+  static const String _transferKey = 'transferBin';
+
+  /// Zone maps
+  final Map<String, StorageContainer> ballDeck = {};
+  final Map<String, StorageContainer> planeDeck = {};
+  final Map<String, StorageContainer> trainDeck = {};
+  final Map<String, StorageContainer> storage = {};
+  final List<StorageContainer> transferBin = [];
 
   void _save() {
     _box

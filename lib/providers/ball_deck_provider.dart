@@ -53,7 +53,7 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   void setSlotCount(
     int count,
   ) {
-    final placement = ULDPlacementManager.instance;
+    final placement = ULDPlacementManager();
     placement.updateSlotCount('BallDeck', count);
 
     final manager = TransferBinManager.instance;
