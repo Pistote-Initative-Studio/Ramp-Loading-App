@@ -106,7 +106,7 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
     final current = outbound ? state.outboundSlots : state.inboundSlots;
     final newCount = sequence.order.length;
 
-    ULDPlacementManager.instance.updateSlotCount('Plane', newCount);
+    ULDPlacementManager().updateSlotCount('Plane', newCount);
 
     final updated = List<StorageContainer?>.filled(newCount, null);
     final copy = newCount < current.length ? newCount : current.length;
