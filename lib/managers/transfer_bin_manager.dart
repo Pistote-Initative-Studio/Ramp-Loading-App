@@ -103,7 +103,8 @@ class TransferBinManager extends ChangeNotifier {
     for (int i = newSlotCount; i < slots.length; i++) {
       final c = slots[i];
       if (c != null) {
-        debugPrint('Moving ${c.uld} from $pageId index $i to transfer bin');
+        debugPrint(
+            'Moved ULD ${c.uld} from $pageId slot $i to transfer bin');
         addULD(c);
       }
     }

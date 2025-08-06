@@ -60,6 +60,7 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     _saveState();
     final transfer = TransferBinManager.instance;
     for (final t in trains) {
+      transfer.validateSlots('train_${t.id}', t.dollys.length);
       transfer.setSlotCount('train_${t.id}', t.dollys.length);
       for (int i = 0; i < t.dollys.length; i++) {
         final load = t.dollys[i].load;
@@ -89,6 +90,7 @@ class TrainNotifier extends StateNotifier<List<Train>> {
     ];
     _saveState();
     final transfer = TransferBinManager.instance;
+    transfer.validateSlots('train_${updated.id}', updated.dollys.length);
     transfer.setSlotCount('train_${updated.id}', updated.dollys.length);
     for (int i = 0; i < updated.dollys.length; i++) {
       final load = updated.dollys[i].load;
