@@ -106,7 +106,15 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
     final current = outbound ? state.outboundSlots : state.inboundSlots;
     final newCount = sequence.order.length;
 
-    ULDPlacementManager().updateSlotCount('Plane', newCount);
+    if (newCount < current.length) {
+      for (int i = newCount; i < current.length; i++) {
+        final uld = current[i];
+        if (uld != null) {
+          transfer.addULD(uld);
+          debugPrint('Moved ULD ${uld.uld} from Plane slot $i to transfer bin');
+        }
+      }
+    }
 
     final updated = List<StorageContainer?>.filled(newCount, null);
     final copy = newCount < current.length ? newCount : current.length;
@@ -125,6 +133,8 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
         inboundSlots: updated,
       );
     }
+
+    ULDPlacementManager().updateSlotCount('Plane', newCount);
   }
 
   void placeContainer(

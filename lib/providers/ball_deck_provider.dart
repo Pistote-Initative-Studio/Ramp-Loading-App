@@ -53,15 +53,15 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   void setSlotCount(
     int count,
   ) {
-    final placement = ULDPlacementManager();
-    placement.updateSlotCount('BallDeck', count);
-
     final manager = TransferBinManager.instance;
     manager.validateSlots(_slotsId, count);
     manager.setSlotCount(_slotsId, count);
 
     state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
+
+    final placement = ULDPlacementManager();
+    placement.updateSlotCount('BallDeck', count);
   }
 
   void addUld(StorageContainer container) {
