@@ -3,6 +3,7 @@ import '../models/container.dart';
 import '../models/aircraft.dart';
 import '../models/plane.dart';
 import '../managers/transfer_bin_manager.dart';
+import '../managers/uld_placement_manager.dart';
 
 class PlaneState {
   final LoadingSequence? inboundSequence;
@@ -105,12 +106,7 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
     final current = outbound ? state.outboundSlots : state.inboundSlots;
     final newCount = sequence.order.length;
 
-    if (newCount < current.length) {
-      for (int i = newCount; i < current.length; i++) {
-        final c = current[i];
-        if (c != null) transfer.addULD(c);
-      }
-    }
+    ULDPlacementManager.instance.updateSlotCount('Plane', newCount);
 
     final updated = List<StorageContainer?>.filled(newCount, null);
     final copy = newCount < current.length ? newCount : current.length;

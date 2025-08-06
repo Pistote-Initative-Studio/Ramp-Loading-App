@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
 import '../managers/transfer_bin_manager.dart';
+import '../managers/uld_placement_manager.dart';
 
 part 'ball_deck_provider.g.dart';
 
@@ -52,25 +53,15 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   void setSlotCount(
     int count,
   ) {
+    final placement = ULDPlacementManager.instance;
+    placement.updateSlotCount('BallDeck', count);
+
     final manager = TransferBinManager.instance;
-    final slots = List<StorageContainer?>.from(manager.getSlots(_slotsId));
-    int moved = 0;
-
-    for (int i = 0; i < slots.length; i++) {
-      final c = slots[i];
-      if (i >= count && c != null) {
-        debugPrint('Moving ${c.uld} from ball deck slot $i to transfer bin');
-        manager.removeULDFromSlots(c);
-        manager.addULD(c);
-        moved++;
-      }
-    }
-
+    manager.validateSlots(_slotsId, count);
     manager.setSlotCount(_slotsId, count);
 
     state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
-    debugPrint('Moved $moved ULDs from ball deck to transfer bin');
   }
 
   void addUld(StorageContainer container) {
