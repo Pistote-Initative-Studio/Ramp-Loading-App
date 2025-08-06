@@ -53,35 +53,22 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     int count,
   ) {
     final manager = TransferBinManager.instance;
-    final current = List<StorageContainer?>.from(state.slots);
+    final slots = List<StorageContainer?>.from(manager.getSlots(_slotsId));
     int moved = 0;
 
-    if (count < current.length) {
-      for (int i = count; i < current.length; i++) {
-        final c = current[i];
-        if (c != null) {
-          manager.addULD(c);
-          moved++;
-        }
+    for (int i = 0; i < slots.length; i++) {
+      final c = slots[i];
+      if (i >= count && c != null) {
+        debugPrint('Moving ${c.uld} from ball deck slot $i to transfer bin');
+        manager.removeULDFromSlots(c);
+        manager.addULD(c);
+        moved++;
       }
     }
 
-    final newSlots = List<StorageContainer?>.filled(count, null);
-    for (int i = 0; i < count && i < current.length; i++) {
-      newSlots[i] = current[i];
-    }
-
-    // Reset manager slots then apply new slot structure.
-    manager.setSlotCount(_slotsId, 0);
     manager.setSlotCount(_slotsId, count);
-    for (int i = 0; i < newSlots.length; i++) {
-      final c = newSlots[i];
-      if (c != null) {
-        manager.placeULDInSlot(_slotsId, i, c);
-      }
-    }
 
-    state = state.copyWith(slots: newSlots);
+    state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
     debugPrint('Moved $moved ULDs from ball deck to transfer bin');
   }
