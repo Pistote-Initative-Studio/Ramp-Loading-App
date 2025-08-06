@@ -30,6 +30,14 @@ void main() async {
   await Future.wait([
     Hive.openBox('ballDeckBox'),
     Hive.openBox('transferBox'),
+    Hive.openBox('uldPlacementBox'),
+    Hive.openBox('configBox'),
+    Hive.openBox('planeBox'),
+    Hive.openBox('planesBox'),
+    Hive.openBox('trainBox'),
+    Hive.openBox('tugBox'),
+    Hive.openBox('tugsBox'),
+    Hive.openBox('uldBox'),
   ]);
 
   runApp(const ProviderScope(child: MyApp()));
