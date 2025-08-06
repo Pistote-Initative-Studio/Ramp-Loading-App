@@ -111,7 +111,6 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
         final uld = current[i];
         if (uld != null) {
           transfer.addULD(uld);
-          debugPrint('Moved ULD ${uld.uld} from Plane slot $i to transfer bin');
         }
       }
     }
