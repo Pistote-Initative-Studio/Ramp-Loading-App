@@ -5,6 +5,11 @@ import '../models/container.dart';
 /// Central manager for ULD placement across all zones in the app.
 class ULDPlacementManager {
   ULDPlacementManager._internal() {
+    if (!Hive.isBoxOpen('uldPlacementBox')) {
+      throw HiveError('uldPlacementBox has not been opened');
+    }
+    _box = Hive.box('uldPlacementBox');
+
     final Map? bd = _box.get(_ballDeckKey);
     if (bd is Map) ballDeck.addAll(bd.cast<String, StorageContainer>());
 
@@ -25,7 +30,7 @@ class ULDPlacementManager {
 
   factory ULDPlacementManager() => _instance;
 
-  final Box _box = Hive.box('uldPlacementBox');
+  late final Box _box;
 
   static const String _ballDeckKey = 'ballDeck';
   static const String _planeDeckKey = 'planeDeck';
