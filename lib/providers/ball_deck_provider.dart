@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/container.dart';
+import '../models/aircraft.dart';
 import '../managers/transfer_bin_manager.dart';
 import '../managers/uld_placement_manager.dart';
 
@@ -65,27 +66,39 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     
     // Move containers that no longer fit to the transfer bin
     if (count < state.slots.length) {
+      // Move main slot containers
       for (int i = count; i < state.slots.length; i++) {
         final container = state.slots[i];
         if (container != null) {
-          debugPrint('=== MOVING ULD TO TRANSFER BIN ===');
-          debugPrint('ULD: ${container.uld} from slot $i');
-          debugPrint('Transfer bin count BEFORE: ${manager.ulds.length}');
-          
-          // First remove from all manager slots to avoid duplicates
           manager.removeULDFromSlots(container);
-          
-          // Then add to transfer bin
           manager.addULD(container);
-          
-          debugPrint('Transfer bin count AFTER: ${manager.ulds.length}');
-          debugPrint('Transfer bin contents: ${manager.ulds.map((u) => u.uld).toList()}');
         }
       }
     }
     
-    // Update state with new slots
-    state = state.copyWith(slots: newSlots);
+    // Handle overflow slots - 2 overflow slots per main slot
+    final newOverflowCount = count * 2;
+    final currentOverflowCount = state.overflow.length;
+    final newOverflow = List<StorageContainer?>.filled(newOverflowCount, null);
+    
+    // Copy overflow containers that fit in the new size
+    for (int i = 0; i < newOverflowCount && i < currentOverflowCount; i++) {
+      newOverflow[i] = state.overflow[i];
+    }
+    
+    // Move overflow containers that no longer fit to the transfer bin
+    if (newOverflowCount < currentOverflowCount) {
+      for (int i = newOverflowCount; i < currentOverflowCount; i++) {
+        final container = state.overflow[i];
+        if (container != null && container.type != SizeEnum.EMPTY) {
+          manager.removeULDFromSlots(container);
+          manager.addULD(container);
+        }
+      }
+    }
+    
+    // Update state with new slots and overflow
+    state = state.copyWith(slots: newSlots, overflow: newOverflow);
     _saveState();
     
     // Reset manager slots to match our state
@@ -93,6 +106,14 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     for (int i = 0; i < newSlots.length; i++) {
       if (newSlots[i] != null) {
         manager.placeULDInSlot(_slotsId, i, newSlots[i]!);
+      }
+    }
+    
+    // Also update manager for overflow slots
+    manager.resetSlots(_overflowId, newOverflowCount);
+    for (int i = 0; i < newOverflow.length; i++) {
+      if (newOverflow[i] != null && newOverflow[i]!.type != SizeEnum.EMPTY) {
+        manager.placeULDInSlot(_overflowId, i, newOverflow[i]!);
       }
     }
 
