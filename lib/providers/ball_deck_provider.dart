@@ -54,10 +54,16 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
     int count,
   ) {
     final manager = TransferBinManager.instance;
-    // Move any ULDs that no longer fit into the ball deck to the transfer bin
-    // before adjusting the slot count. This ensures containers from removed
-    // slots do not remain associated with the same index and reappear when the
-    // slots are restored.
+    
+    // Create a new slots list with the correct size
+    final newSlots = List<StorageContainer?>.filled(count, null);
+    
+    // Copy over containers that fit in the new size
+    for (int i = 0; i < count && i < state.slots.length; i++) {
+      newSlots[i] = state.slots[i];
+    }
+    
+    // Move any ULDs that no longer fit into the transfer bin
     if (count < state.slots.length) {
       for (int i = count; i < state.slots.length; i++) {
         final c = state.slots[i];
@@ -69,16 +75,23 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
       }
     }
 
-    // Let the manager reconcile its internal slot list and remove any
-    // containers that fall outside the new range.
-    manager.validateSlots(_slotsId, count);
+    // Update the state with the new slots list
+    state = state.copyWith(slots: newSlots);
+    
+    // Update manager's internal tracking
     manager.setSlotCount(_slotsId, count);
-
-    // Persist the updated slot list in state and Hive.
-    state = state.copyWith(slots: manager.getSlots(_slotsId));
+    
+    // Sync the manager's slots with our state
+    for (int i = 0; i < newSlots.length; i++) {
+      if (newSlots[i] != null) {
+        manager.placeULDInSlot(_slotsId, i, newSlots[i]!);
+      }
+    }
+    
+    // Save the updated state
     _saveState();
 
-    // Keep placement tracking in sync so other zones see the move.
+    // Keep placement tracking in sync
     final placement = ULDPlacementManager();
     placement.updateSlotCount('BallDeck', count);
   }
