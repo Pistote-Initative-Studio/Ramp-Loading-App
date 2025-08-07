@@ -110,22 +110,33 @@ class TransferBinManager extends ChangeNotifier {
   void validateSlots(String pageId, int newSlotCount) {
     final slots = _slots[pageId];
     if (slots == null) return;
-    if (newSlotCount >= slots.length) return;
+    if (newSlotCount >= slots.length) {
+      // If we're increasing the size, just resize
+      setSlotCount(pageId, newSlotCount);
+      return;
+    }
 
     debugPrint('VALIDATE $pageId -> $newSlotCount');
+    
+    // First, collect all containers that need to be moved to transfer bin
+    final containersToMove = <StorageContainer>[];
     for (int i = newSlotCount; i < slots.length; i++) {
       final c = slots[i];
       if (c != null) {
         debugPrint(
             'Moved ULD ${c.uld} from $pageId slot $i to transfer bin');
-        addULD(c);
-        // Clear the slot so it doesn't persist
-        slots[i] = null;
+        containersToMove.add(c);
       }
     }
     
-    // Now resize the list to the new count
+    // Now resize the list to the new count FIRST
     _slots[pageId] = slots.sublist(0, newSlotCount);
+    
+    // Then add the containers to the transfer bin
+    for (final c in containersToMove) {
+      addULD(c);
+    }
+    
     _save();
     notifyListeners();
   }
