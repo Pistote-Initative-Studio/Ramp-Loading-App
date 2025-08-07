@@ -55,40 +55,12 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   ) {
     final manager = TransferBinManager.instance;
     
-    // Create a new slots list with the correct size
-    final newSlots = List<StorageContainer?>.filled(count, null);
-    
-    // Copy over containers that fit in the new size
-    for (int i = 0; i < count && i < state.slots.length; i++) {
-      newSlots[i] = state.slots[i];
-    }
-    
     // Move any ULDs that no longer fit into the transfer bin
-    if (count < state.slots.length) {
-      for (int i = count; i < state.slots.length; i++) {
-        final c = state.slots[i];
-        if (c != null) {
-          debugPrint(
-              'Moved ULD ${c.uld} from BallDeck slot $i to transfer bin');
-          manager.addULD(c);
-        }
-      }
-    }
-
-    // Update the state with the new slots list
-    state = state.copyWith(slots: newSlots);
+    // The validateSlots method will handle this and clear the slots
+    manager.validateSlots(_slotsId, count);
     
-    // Update manager's internal tracking
-    manager.setSlotCount(_slotsId, count);
-    
-    // Sync the manager's slots with our state
-    for (int i = 0; i < newSlots.length; i++) {
-      if (newSlots[i] != null) {
-        manager.placeULDInSlot(_slotsId, i, newSlots[i]!);
-      }
-    }
-    
-    // Save the updated state
+    // Update our state to match the validated slots from the manager
+    state = state.copyWith(slots: manager.getSlots(_slotsId));
     _saveState();
 
     // Keep placement tracking in sync

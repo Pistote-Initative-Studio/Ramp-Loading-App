@@ -56,11 +56,24 @@ class TransferBinManager extends ChangeNotifier {
   void setSlotCount(String pageId, int count) {
     final existing = _slots[pageId] ?? [];
     final newList = List<StorageContainer?>.filled(count, null);
-    final copy = count < existing.length ? count : existing.length;
-    for (int i = 0; i < copy; i++) {
+    
+    // Only copy containers that should remain (within the new count)
+    // Don't copy containers beyond the new count - they should be handled
+    // by validateSlots or explicit removal
+    final copyCount = count < existing.length ? count : existing.length;
+    for (int i = 0; i < copyCount; i++) {
       newList[i] = existing[i];
     }
+    
     _slots[pageId] = newList;
+    _save();
+    notifyListeners();
+  }
+  
+  /// Clears slots for a given pageId and sets a new count with all null values
+  /// Use this when you want to completely reset the slots
+  void resetSlots(String pageId, int count) {
+    _slots[pageId] = List<StorageContainer?>.filled(count, null);
     _save();
     notifyListeners();
   }
@@ -106,8 +119,12 @@ class TransferBinManager extends ChangeNotifier {
         debugPrint(
             'Moved ULD ${c.uld} from $pageId slot $i to transfer bin');
         addULD(c);
+        // Clear the slot so it doesn't persist
+        slots[i] = null;
       }
     }
+    
+    // Now resize the list to the new count
     _slots[pageId] = slots.sublist(0, newSlotCount);
     _save();
     notifyListeners();
@@ -128,4 +145,3 @@ class TransferBinManager extends ChangeNotifier {
     notifyListeners();
   }
 }
-
