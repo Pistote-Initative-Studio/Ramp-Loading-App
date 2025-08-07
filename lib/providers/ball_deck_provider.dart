@@ -55,13 +55,46 @@ class BallDeckNotifier extends StateNotifier<BallDeckState> {
   ) {
     final manager = TransferBinManager.instance;
     
-    // Move any ULDs that no longer fit into the transfer bin
-    // The validateSlots method will handle this and clear the slots
-    manager.validateSlots(_slotsId, count);
+    // Create new slots array with the correct size
+    final newSlots = List<StorageContainer?>.filled(count, null);
     
-    // Update our state to match the validated slots from the manager
-    state = state.copyWith(slots: manager.getSlots(_slotsId));
+    // Copy containers that fit in the new size
+    for (int i = 0; i < count && i < state.slots.length; i++) {
+      newSlots[i] = state.slots[i];
+    }
+    
+    // Move containers that no longer fit to the transfer bin
+    if (count < state.slots.length) {
+      for (int i = count; i < state.slots.length; i++) {
+        final container = state.slots[i];
+        if (container != null) {
+          debugPrint('=== MOVING ULD TO TRANSFER BIN ===');
+          debugPrint('ULD: ${container.uld} from slot $i');
+          debugPrint('Transfer bin count BEFORE: ${manager.ulds.length}');
+          
+          // First remove from all manager slots to avoid duplicates
+          manager.removeULDFromSlots(container);
+          
+          // Then add to transfer bin
+          manager.addULD(container);
+          
+          debugPrint('Transfer bin count AFTER: ${manager.ulds.length}');
+          debugPrint('Transfer bin contents: ${manager.ulds.map((u) => u.uld).toList()}');
+        }
+      }
+    }
+    
+    // Update state with new slots
+    state = state.copyWith(slots: newSlots);
     _saveState();
+    
+    // Reset manager slots to match our state
+    manager.resetSlots(_slotsId, count);
+    for (int i = 0; i < newSlots.length; i++) {
+      if (newSlots[i] != null) {
+        manager.placeULDInSlot(_slotsId, i, newSlots[i]!);
+      }
+    }
 
     // Keep placement tracking in sync
     final placement = ULDPlacementManager();
