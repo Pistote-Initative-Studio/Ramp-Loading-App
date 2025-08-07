@@ -29,10 +29,10 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
   void setSize(int count) {
     // Validate slots first - this moves excess ULDs to transfer bin
     _manager.validateSlots(_pageId, count);
-    
+
     // Update the state to reflect the new slots
     state = _manager.getSlots(_pageId);
-    
+
     // Keep placement tracking in sync
     ULDPlacementManager().updateSlotCount('Storage', count);
   }
