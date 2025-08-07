@@ -84,11 +84,28 @@ class TrainNotifier extends StateNotifier<List<Train>> {
   }
 
   void updateTrain(Train updated) {
+    // Find the existing train
+    Train? existing;
+    try {
+      existing = state.firstWhere((t) => t.id == updated.id);
+    } catch (_) {}
+    
+    // If reducing dolly count, move excess ULDs to transfer bin
+    if (existing != null && updated.dollyCount < existing.dollys.length) {
+      for (int i = updated.dollyCount; i < existing.dollys.length; i++) {
+        final container = existing.dollys[i].load;
+        if (container != null) {
+          TransferBinManager.instance.addULD(container);
+        }
+      }
+    }
+    
     state = [
       for (final t in state)
         if (t.id == updated.id) updated else t,
     ];
     _saveState();
+    
     final transfer = TransferBinManager.instance;
     transfer.validateSlots('train_${updated.id}', updated.dollys.length);
     transfer.setSlotCount('train_${updated.id}', updated.dollys.length);

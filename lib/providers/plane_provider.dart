@@ -106,6 +106,7 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
     final current = outbound ? state.outboundSlots : state.inboundSlots;
     final newCount = sequence.order.length;
 
+    // If reducing slots, move excess ULDs to transfer bin
     if (newCount < current.length) {
       for (int i = newCount; i < current.length; i++) {
         final uld = current[i];
@@ -115,9 +116,12 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
       }
     }
 
+    // Create new slots array with correct size
     final updated = List<StorageContainer?>.filled(newCount, null);
-    final copy = newCount < current.length ? newCount : current.length;
-    for (int i = 0; i < copy; i++) {
+    
+    // Copy over ULDs that fit in the new configuration
+    final copyCount = newCount < current.length ? newCount : current.length;
+    for (int i = 0; i < copyCount; i++) {
       updated[i] = current[i];
     }
 
