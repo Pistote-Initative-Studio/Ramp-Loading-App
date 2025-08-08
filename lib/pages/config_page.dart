@@ -89,7 +89,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     Aircraft('B763', 'Boeing 767-300 Freighter', [], [
       LoadingSequence('A', 'A', List.generate(17, (i) => i)),
       LoadingSequence('B', 'B', List.generate(13, (i) => i)),
-      LoadingSequence('C', 'C', List.generate(24, (i) => i)),
+      LoadingSequence('C', 'C', List.generate(20, (i) => i)),
     ]),
     Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
   ];
