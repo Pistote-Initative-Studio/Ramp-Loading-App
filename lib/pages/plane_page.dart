@@ -26,7 +26,7 @@ final List<Aircraft> aircraftList = [
   Aircraft('B763', 'Boeing 767-300 Freighter', [], [
     LoadingSequence('A', 'A', List.generate(17, (i) => i)),
     LoadingSequence('B', 'B', List.generate(13, (i) => i)),
-    LoadingSequence('C', 'C', List.generate(24, (i) => i)),
+    LoadingSequence('C', 'C', List.generate(20, (i) => i)),
   ]),
   Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
 ];
@@ -621,7 +621,7 @@ class PlanePage extends ConsumerWidget {
           return 'B${index + 3}';
         case 'C':
           if (index == 0) return '1';
-          if (index == sequence.order.length - 1) return 'A17';
+          if (index == sequence.order.length - 1) return 'A13';
           final adj = index - 1;
           final row = adj ~/ 2 + 2;
           final side = adj % 2 == 0 ? 'L' : 'R';
