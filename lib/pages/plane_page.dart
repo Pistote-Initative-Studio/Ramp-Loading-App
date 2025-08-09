@@ -26,7 +26,7 @@ final List<Aircraft> aircraftList = [
   Aircraft('B763', 'Boeing 767-300 Freighter', [], [
     LoadingSequence('A', 'A', List.generate(17, (i) => i)),
     LoadingSequence('B', 'B', List.generate(13, (i) => i)),
-    LoadingSequence('C', 'C', List.generate(20, (i) => i)),
+    LoadingSequence('C', 'C', List.generate(24, (i) => i)),
   ]),
   Aircraft('B752', 'Boeing 757-200 Freighter', [], []),
 ];
@@ -238,6 +238,101 @@ class PlanePage extends ConsumerWidget {
     final plane = ref.watch(planeProvider);
     final slots = outbound ? plane.outboundSlots : plane.inboundSlots;
     final columns = _columnCount(sequence);
+    final aircraft = ref.watch(aircraftProvider);
+
+    if (aircraft?.typeCode == 'B763' && sequence.label == 'C') {
+      final pairCount = (slots.length - 4) ~/ 2;
+      return Column(
+        children: [
+          _buildSlot(
+            context,
+            ref,
+            0,
+            _slotLabel(ref, sequence, 0),
+            outbound,
+          ),
+          SizedBox(height: slotRunSpacing),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: List.generate(pairCount, (i) {
+                    final index = i * 2 + 1;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == pairCount - 1 ? 0 : slotRunSpacing,
+                      ),
+                      child: _buildSlot(
+                        context,
+                        ref,
+                        index,
+                        _slotLabel(ref, sequence, index),
+                        outbound,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              SizedBox(width: slotSpacing),
+              Expanded(
+                child: Column(
+                  children: List.generate(pairCount, (i) {
+                    final index = i * 2 + 2;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == pairCount - 1 ? 0 : slotRunSpacing,
+                      ),
+                      child: _buildSlot(
+                        context,
+                        ref,
+                        index,
+                        _slotLabel(ref, sequence, index),
+                        outbound,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: slotRunSpacing),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSlot(
+                  context,
+                  ref,
+                  pairCount * 2 + 1,
+                  _slotLabel(ref, sequence, pairCount * 2 + 1),
+                  outbound,
+                ),
+              ),
+              SizedBox(width: slotSpacing),
+              Expanded(
+                child: _buildSlot(
+                  context,
+                  ref,
+                  pairCount * 2 + 2,
+                  _slotLabel(ref, sequence, pairCount * 2 + 2),
+                  outbound,
+                ),
+              ),
+              SizedBox(width: slotSpacing),
+              Expanded(
+                child: _buildSlot(
+                  context,
+                  ref,
+                  pairCount * 2 + 3,
+                  _slotLabel(ref, sequence, pairCount * 2 + 3),
+                  outbound,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
 
     if (columns == 2) {
       if (sequence.order.length == 24) {
@@ -621,11 +716,16 @@ class PlanePage extends ConsumerWidget {
           return 'B${index + 3}';
         case 'C':
           if (index == 0) return '1';
-          if (index == sequence.order.length - 1) return 'A13';
+          if (sequence.order.length == 24) {
+            if (index == 22) return 'A13';
+            if (index == 23) return 'R12';
+          } else if (index == sequence.order.length - 1) {
+            return 'A13';
+          }
           final adj = index - 1;
           final row = adj ~/ 2 + 2;
           final side = adj % 2 == 0 ? 'L' : 'R';
-          return '$row$side';
+          return '$side$row';
       }
     }
 
