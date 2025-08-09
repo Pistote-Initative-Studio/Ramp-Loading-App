@@ -311,7 +311,8 @@ class _PlanePageState extends ConsumerState<PlanePage> {
   void _repositionDoorMarker() {
     final aircraft = ref.read(aircraftProvider);
     final isLowerDeck = ref.read(lowerDeckviewProvider);
-    if (aircraft?.typeCode != 'B763' || isLowerDeck) {
+    final type = aircraft?.typeCode;
+    if (isLowerDeck || (type != 'B763' && type != 'B762')) {
       if (_doorMarkerRect != null) {
         setState(() => _doorMarkerRect = null);
       }
@@ -322,18 +323,36 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     final sequence =
         isOutbound ? planeState.outboundSequence : planeState.inboundSequence;
     String? label;
-    switch (sequence?.label) {
-      case 'A':
-        label = 'A3';
-        break;
-      case 'B':
-        label = 'B3';
-        break;
-      case 'C':
-        label = '3L';
-        break;
-      default:
-        label = null;
+    if (type == 'B763') {
+      switch (sequence?.label) {
+        case 'A':
+          label = 'A3';
+          break;
+        case 'B':
+          label = 'B3';
+          break;
+        case 'C':
+          label = '3L';
+          break;
+        default:
+          label = null;
+      }
+    } else if (type == 'B762') {
+      switch (sequence?.label) {
+        case 'A':
+        case 'B':
+          label = '2L';
+          break;
+        case 'C':
+        case 'D':
+          label = '1R';
+          break;
+        case 'E':
+          label = '2';
+          break;
+        default:
+          label = null;
+      }
     }
     if (label == null) {
       if (_doorMarkerRect != null) {
@@ -1003,7 +1022,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     final planeId = ref.watch(selectedPlaneIdProvider);
     final aircraft = ref.watch(aircraftProvider);
     final slotKey = GlobalKey();
-    if (aircraft?.typeCode == 'B763') {
+    if (aircraft?.typeCode == 'B763' || aircraft?.typeCode == 'B762') {
       _slotKeys[label] = slotKey;
     }
 
