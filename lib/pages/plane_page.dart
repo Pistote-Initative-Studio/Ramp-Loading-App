@@ -418,7 +418,8 @@ class _PlanePageState extends ConsumerState<PlanePage> {
   void _repositionLowerDeckMarkers() {
     final aircraft = ref.read(aircraftProvider);
     final isLowerDeck = ref.read(lowerDeckviewProvider);
-    if (aircraft?.typeCode != 'B763' || !isLowerDeck) {
+    final type = aircraft?.typeCode;
+    if (!isLowerDeck || (type != 'B763' && type != 'B762')) {
       if (_lowerDeckMarker14 != null ||
           _lowerDeckMarker41 != null ||
           _lowerDeckSplitRect != null) {
@@ -430,49 +431,100 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       }
       return;
     }
-    final rect14 = _rectForSlot('14');
-    final rect41 = _rectForSlot('41');
-    final rect24 = _rectForSlot('24');
-    final rect31 = _rectForSlot('31');
-    if (rect14 == null || rect41 == null || rect24 == null || rect31 == null) {
-      if (_lowerDeckMarker14 != null ||
-          _lowerDeckMarker41 != null ||
-          _lowerDeckSplitRect != null) {
-        setState(() {
-          _lowerDeckMarker14 = null;
-          _lowerDeckMarker41 = null;
-          _lowerDeckSplitRect = null;
-        });
-      }
-      return;
-    }
+
     const thickness = 2.0;
     const offset = 8.0;
-    final marker14 = Rect.fromLTWH(
-      rect14.right + offset,
-      rect14.top,
+
+    if (type == 'B763') {
+      final rect14 = _rectForSlot('14');
+      final rect41 = _rectForSlot('41');
+      final rect24 = _rectForSlot('24');
+      final rect31 = _rectForSlot('31');
+      if (rect14 == null || rect41 == null || rect24 == null || rect31 == null) {
+        if (_lowerDeckMarker14 != null ||
+            _lowerDeckMarker41 != null ||
+            _lowerDeckSplitRect != null) {
+          setState(() {
+            _lowerDeckMarker14 = null;
+            _lowerDeckMarker41 = null;
+            _lowerDeckSplitRect = null;
+          });
+        }
+        return;
+      }
+      final marker14 = Rect.fromLTWH(
+        rect14.right + offset,
+        rect14.top,
+        thickness,
+        rect14.height,
+      );
+      final marker41 = Rect.fromLTWH(
+        rect41.right + offset,
+        rect41.top,
+        thickness,
+        rect41.height,
+      );
+      final splitTop = (rect24.bottom + rect31.top) / 2 - thickness / 2;
+      final splitRect = Rect.fromLTWH(
+        rect24.left,
+        splitTop,
+        rect24.width,
+        thickness,
+      );
+      if (_lowerDeckMarker14 != marker14 ||
+          _lowerDeckMarker41 != marker41 ||
+          _lowerDeckSplitRect != splitRect) {
+        setState(() {
+          _lowerDeckMarker14 = marker14;
+          _lowerDeckMarker41 = marker41;
+          _lowerDeckSplitRect = splitRect;
+        });
+      }
+      return;
+    }
+
+    // B762 lower deck markers
+    final rect2dc = _rectForSlot('2DC');
+    final rect4dc = _rectForSlot('4DC');
+    final rect2fc = _rectForSlot('2FC');
+    final rect3ac = _rectForSlot('3AC');
+    if (rect2dc == null || rect4dc == null || rect2fc == null || rect3ac == null) {
+      if (_lowerDeckMarker14 != null ||
+          _lowerDeckMarker41 != null ||
+          _lowerDeckSplitRect != null) {
+        setState(() {
+          _lowerDeckMarker14 = null;
+          _lowerDeckMarker41 = null;
+          _lowerDeckSplitRect = null;
+        });
+      }
+      return;
+    }
+    final marker2dc = Rect.fromLTWH(
+      rect2dc.right + offset,
+      rect2dc.top,
       thickness,
-      rect14.height,
+      rect2dc.height,
     );
-    final marker41 = Rect.fromLTWH(
-      rect41.right + offset,
-      rect41.top,
+    final marker4dc = Rect.fromLTWH(
+      rect4dc.right + offset,
+      rect4dc.top,
       thickness,
-      rect41.height,
+      rect4dc.height,
     );
-    final splitTop = (rect24.bottom + rect31.top) / 2 - thickness / 2;
+    final splitTop = (rect2fc.bottom + rect3ac.top) / 2 - thickness / 2;
     final splitRect = Rect.fromLTWH(
-      rect24.left,
+      rect2fc.left,
       splitTop,
-      rect24.width,
+      rect2fc.width,
       thickness,
     );
-    if (_lowerDeckMarker14 != marker14 ||
-        _lowerDeckMarker41 != marker41 ||
+    if (_lowerDeckMarker14 != marker2dc ||
+        _lowerDeckMarker41 != marker4dc ||
         _lowerDeckSplitRect != splitRect) {
       setState(() {
-        _lowerDeckMarker14 = marker14;
-        _lowerDeckMarker41 = marker41;
+        _lowerDeckMarker14 = marker2dc;
+        _lowerDeckMarker41 = marker4dc;
         _lowerDeckSplitRect = splitRect;
       });
     }
