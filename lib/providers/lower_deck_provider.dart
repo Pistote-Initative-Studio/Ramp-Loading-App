@@ -37,9 +37,22 @@ class LowerDeckNotifier extends StateNotifier<LowerDeckState> {
         );
 
   void loadFromPlane(Plane plane) {
+    final required = plane.aircraftTypeCode == 'B762' ? 11 : 15;
+    var inbound = List<StorageContainer?>.from(plane.lowerInboundSlots);
+    var outbound = List<StorageContainer?>.from(plane.lowerOutboundSlots);
+    if (inbound.length < required) {
+      inbound.addAll(List.filled(required - inbound.length, null));
+    } else if (inbound.length > required) {
+      inbound = inbound.sublist(0, required);
+    }
+    if (outbound.length < required) {
+      outbound.addAll(List.filled(required - outbound.length, null));
+    } else if (outbound.length > required) {
+      outbound = outbound.sublist(0, required);
+    }
     state = LowerDeckState(
-      inboundSlots: List.from(plane.lowerInboundSlots),
-      outboundSlots: List.from(plane.lowerOutboundSlots),
+      inboundSlots: inbound,
+      outboundSlots: outbound,
     );
   }
 

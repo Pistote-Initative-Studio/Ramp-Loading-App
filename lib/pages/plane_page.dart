@@ -37,6 +37,39 @@ final lowerDeckviewProvider = StateProvider<bool>((ref) => false);
 // layouts for both main deck and lower deck views.
 const double _kSingleColumnWidth = 100.0;
 
+// Lower deck labels for supported aircraft
+const List<String> _kB762LowerDeckLabels = [
+  '1AC',
+  '1BC',
+  '1CC',
+  '2DC',
+  '2EC',
+  '2FC',
+  '3AC',
+  '3BC',
+  '3CC',
+  '4DC',
+  '4EC',
+];
+
+const List<String> _kB763LowerDeckLabels = [
+  '11',
+  '12',
+  '13',
+  '14',
+  '21',
+  '22',
+  '23',
+  '24',
+  '31',
+  '32',
+  '33',
+  '34',
+  '41',
+  '42',
+  '43',
+];
+
 class PlanePage extends ConsumerStatefulWidget {
   const PlanePage({super.key});
 
@@ -768,32 +801,18 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     bool outbound,
   ) {
     _slotKeys.clear();
-    final deck = ref.watch(lowerDeckProvider);
-    final slots = outbound ? deck.outboundSlots : deck.inboundSlots;
-    const labels = [
-      '11',
-      '12',
-      '13',
-      '14',
-      '21',
-      '22',
-      '23',
-      '24',
-      '31',
-      '32',
-      '33',
-      '34',
-      '41',
-      '42',
-      '43',
-    ];
+    ref.watch(lowerDeckProvider);
+    final aircraft = ref.watch(aircraftProvider);
+    final labels = aircraft?.typeCode == 'B762'
+        ? _kB762LowerDeckLabels
+        : _kB763LowerDeckLabels;
 
     final children = <Widget>[];
-    for (int i = 0; i < slots.length; i++) {
+    for (int i = 0; i < labels.length; i++) {
       children.add(
         Padding(
           padding: EdgeInsets.only(
-            bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
+            bottom: i == labels.length - 1 ? 0 : slotRunSpacing,
           ),
           child: _buildLowerDeckSlot(context, ref, i, labels[i], outbound),
         ),
