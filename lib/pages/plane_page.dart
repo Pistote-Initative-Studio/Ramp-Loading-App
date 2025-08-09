@@ -272,11 +272,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
             top: _doorMarkerRect!.top,
             child: IgnorePointer(
               child: Container(
-                width: 22,
-                height: 3,
+                width: _doorMarkerRect!.width,
+                height: _doorMarkerRect!.height,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(1.5),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
@@ -328,8 +328,14 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     final slotBox = key!.currentContext!.findRenderObject() as RenderBox;
     final stackBox = _gridKey.currentContext!.findRenderObject() as RenderBox;
     final slotPos = slotBox.localToGlobal(Offset.zero, ancestor: stackBox);
-    final anchor = Offset(slotPos.dx, slotPos.dy + slotBox.size.height / 2);
-    final rect = Rect.fromLTWH(anchor.dx - 6 - 22, anchor.dy - 1.5, 22, 3);
+    const lineWidth = 4.0;
+    const lineGap = 8.0;
+    final rect = Rect.fromLTWH(
+      slotPos.dx - lineGap - lineWidth,
+      slotPos.dy,
+      lineWidth,
+      slotBox.size.height,
+    );
     if (_doorMarkerRect != rect) {
       setState(() {
         _doorMarkerRect = rect;
