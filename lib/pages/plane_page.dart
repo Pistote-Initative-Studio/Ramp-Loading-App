@@ -16,7 +16,7 @@ import '../widgets/transfer_menu.dart';
 import '../utils/uld_mover.dart';
 
 final List<Aircraft> aircraftList = [
-  Aircraft('B762', 'Boeinf 767-200 Freighter', [], [
+  Aircraft('B762', 'Boeing 767-200 Freighter', [], [
     LoadingSequence('A', 'A', List.generate(19, (i) => i)),
     LoadingSequence('B', 'B', List.generate(21, (i) => i)),
     LoadingSequence('C', 'C', List.generate(10, (i) => i)),
