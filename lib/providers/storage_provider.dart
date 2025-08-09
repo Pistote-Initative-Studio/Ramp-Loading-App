@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/container.dart';
+import '../managers/transfer_bin_manager.dart';
+import '../managers/uld_placement_manager.dart';
 
 final storageProvider =
     StateNotifierProvider<StorageNotifier, List<StorageContainer?>>((ref) {
@@ -8,7 +10,9 @@ final storageProvider =
     });
 
 class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
+  static const _pageId = 'storage';
   static const _slotCountKey = 'storageSlotCount';
+  final TransferBinManager _manager = TransferBinManager.instance;
   Box? _box;
 
   StorageNotifier() : super([]) {
@@ -16,66 +20,76 @@ class StorageNotifier extends StateNotifier<List<StorageContainer?>> {
   }
 
   void _initializeBox() {
+    // Since the box should already be opened in main.dart, we can access it directly
     try {
       _box = Hive.box('storageBox');
       
       // Load the persisted slot count
       final savedSlotCount = _box!.get(_slotCountKey, defaultValue: 0) as int;
-      print('Storage: Loading saved slot count: $savedSlotCount');
       
-      // Create the initial state with the saved slot count
+      // Initialize the manager with the saved slot count
       if (savedSlotCount > 0) {
-        state = List<StorageContainer?>.filled(savedSlotCount, null);
-        print('Storage: Created ${state.length} slots');
-      } else {
-        state = [];
-        print('Storage: No slots to create');
+        _manager.setSlotCount(_pageId, savedSlotCount);
       }
+      
+      // Set initial state
+      state = _manager.getSlots(_pageId);
+      
+      // Listen for changes
+      _manager.addListener(_update);
     } catch (e) {
       print('Error initializing storage box: $e');
+      // Fallback to empty state
       state = [];
     }
   }
 
+  void _update() {
+    state = _manager.getSlots(_pageId);
+  }
+
+  @override
+  void dispose() {
+    _manager.removeListener(_update);
+    super.dispose();
+  }
+
   void setSize(int count) {
-    print('Storage: Setting size to $count');
-    
     // Save the slot count to persistence
     _box?.put(_slotCountKey, count);
     
-    // Create new slots list
-    final newSlots = List<StorageContainer?>.filled(count, null);
-    
-    // Copy existing containers that fit
-    for (int i = 0; i < count && i < state.length; i++) {
-      newSlots[i] = state[i];
-    }
-    
-    // Update state
-    state = newSlots;
-    
-    print('Storage: New state has ${state.length} slots');
+    // Validate slots first - this moves excess ULDs to transfer bin
+    _manager.validateSlots(_pageId, count);
+
+    // Update the state to reflect the new slots
+    state = _manager.getSlots(_pageId);
+
+    // Keep placement tracking in sync
+    ULDPlacementManager().updateSlotCount('Storage', count);
   }
 
   int getCurrentSlotCount() {
-    final count = _box?.get(_slotCountKey, defaultValue: 0) as int? ?? 0;
-    print('Storage: Current slot count: $count');
-    return count;
+    return _box?.get(_slotCountKey, defaultValue: 0) as int? ?? 0;
   }
 
   void placeContainer(int idx, StorageContainer container) {
-    if (idx < state.length) {
-      final newState = [...state];
-      newState[idx] = container;
-      state = newState;
+    _manager.placeULDInSlot(_pageId, idx, container);
+    state = _manager.getSlots(_pageId);
+  }
+
+  void addUld(StorageContainer container) {
+    final slots = _manager.getSlots(_pageId);
+    for (int i = 0; i < slots.length; i++) {
+      if (slots[i] == null) {
+        placeContainer(i, container);
+        return;
+      }
     }
+    placeContainer(slots.length, container);
   }
 
   void removeContainer(StorageContainer container) {
-    final newState = [
-      for (final slot in state)
-        if (slot?.id == container.id) null else slot
-    ];
-    state = newState;
+    _manager.removeULDFromSlots(container);
+    state = _manager.getSlots(_pageId);
   }
 }
