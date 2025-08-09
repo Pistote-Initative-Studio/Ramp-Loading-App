@@ -395,14 +395,15 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       return;
     }
     const thickness = 2.0;
+    const offset = 8.0;
     final marker14 = Rect.fromLTWH(
-      rect14.right - thickness,
+      rect14.right + offset,
       rect14.top,
       thickness,
       rect14.height,
     );
     final marker41 = Rect.fromLTWH(
-      rect41.right - thickness,
+      rect41.right + offset,
       rect41.top,
       thickness,
       rect41.height,
