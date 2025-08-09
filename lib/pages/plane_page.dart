@@ -33,11 +33,21 @@ final List<Aircraft> aircraftList = [
 
 final lowerDeckviewProvider = StateProvider<bool>((ref) => false);
 
-class PlanePage extends ConsumerWidget {
+class PlanePage extends ConsumerStatefulWidget {
   const PlanePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlanePage> createState() => _PlanePageState();
+}
+
+class _PlanePageState extends ConsumerState<PlanePage> {
+  final _gridKey = GlobalKey();
+  final Map<String, GlobalKey> _slotKeys = {};
+  Rect? _doorMarkerRect;
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     try {
       if (!Hive.isBoxOpen('planeBox')) {
         return _buildNoPlaneScaffold();
@@ -216,7 +226,7 @@ class PlanePage extends ConsumerWidget {
                       padding: slotPadding,
                       child: isLowerDeck
                           ? _buildLowerDeckLayout(context, ref, isOutbound)
-                          : _buildLayout(context, ref, sequence, isOutbound),
+                          : _buildMainDeckWithDoor(context, ref, sequence, isOutbound),
                     ),
             ),
           ],
@@ -241,6 +251,90 @@ class PlanePage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildMainDeckWithDoor(
+    BuildContext context,
+    WidgetRef ref,
+    LoadingSequence sequence,
+    bool outbound,
+  ) {
+    _slotKeys.clear();
+    final grid = _buildLayout(context, ref, sequence, outbound);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _repositionDoorMarker());
+    return Stack(
+      key: _gridKey,
+      children: [
+        grid,
+        if (_doorMarkerRect != null)
+          Positioned(
+            left: _doorMarkerRect!.left,
+            top: _doorMarkerRect!.top,
+            child: IgnorePointer(
+              child: Container(
+                width: 22,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _repositionDoorMarker() {
+    final aircraft = ref.read(aircraftProvider);
+    final isLowerDeck = ref.read(lowerDeckviewProvider);
+    if (aircraft?.typeCode != 'B763' || isLowerDeck) {
+      if (_doorMarkerRect != null) {
+        setState(() => _doorMarkerRect = null);
+      }
+      return;
+    }
+    final planeState = ref.read(planeProvider);
+    final isOutbound = ref.read(isOutboundProvider);
+    final sequence =
+        isOutbound ? planeState.outboundSequence : planeState.inboundSequence;
+    String? label;
+    switch (sequence?.label) {
+      case 'A':
+        label = 'A3';
+        break;
+      case 'B':
+        label = 'B3';
+        break;
+      case 'C':
+        label = '3L';
+        break;
+      default:
+        label = null;
+    }
+    if (label == null) {
+      if (_doorMarkerRect != null) {
+        setState(() => _doorMarkerRect = null);
+      }
+      return;
+    }
+    final key = _slotKeys[label];
+    if (key?.currentContext == null || _gridKey.currentContext == null) {
+      if (_doorMarkerRect != null) {
+        setState(() => _doorMarkerRect = null);
+      }
+      return;
+    }
+    final slotBox = key!.currentContext!.findRenderObject() as RenderBox;
+    final stackBox = _gridKey.currentContext!.findRenderObject() as RenderBox;
+    final slotPos = slotBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    final anchor = Offset(slotPos.dx, slotPos.dy + slotBox.size.height / 2);
+    final rect = Rect.fromLTWH(anchor.dx - 6 - 22, anchor.dy - 1.5, 22, 3);
+    if (_doorMarkerRect != rect) {
+      setState(() {
+        _doorMarkerRect = rect;
+      });
+    }
   }
 
   Widget _buildLayout(
@@ -752,6 +846,11 @@ class PlanePage extends ConsumerWidget {
             : planeState.inboundSlots[index];
 
     final planeId = ref.watch(selectedPlaneIdProvider);
+    final aircraft = ref.watch(aircraftProvider);
+    final slotKey = GlobalKey();
+    if (aircraft?.typeCode == 'B763') {
+      _slotKeys[label] = slotKey;
+    }
 
     return GestureDetector(
       onLongPressStart: container == null
@@ -802,6 +901,7 @@ class PlanePage extends ConsumerWidget {
             borderType: BorderType.RRect,
             radius: const Radius.circular(8),
             child: Container(
+              key: slotKey,
               width: 100,
               height: 100,
               alignment: Alignment.center,
