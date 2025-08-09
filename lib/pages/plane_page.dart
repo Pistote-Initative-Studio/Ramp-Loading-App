@@ -48,6 +48,9 @@ class _PlanePageState extends ConsumerState<PlanePage> {
   final _gridKey = GlobalKey();
   final Map<String, GlobalKey> _slotKeys = {};
   Rect? _doorMarkerRect;
+  Rect? _lowerDeckMarker14;
+  Rect? _lowerDeckMarker41;
+  Rect? _lowerDeckSplitRect;
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +359,68 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     if (_doorMarkerRect != rect) {
       setState(() {
         _doorMarkerRect = rect;
+      });
+    }
+  }
+
+  void _repositionLowerDeckMarkers() {
+    final aircraft = ref.read(aircraftProvider);
+    final isLowerDeck = ref.read(lowerDeckviewProvider);
+    if (aircraft?.typeCode != 'B763' || !isLowerDeck) {
+      if (_lowerDeckMarker14 != null ||
+          _lowerDeckMarker41 != null ||
+          _lowerDeckSplitRect != null) {
+        setState(() {
+          _lowerDeckMarker14 = null;
+          _lowerDeckMarker41 = null;
+          _lowerDeckSplitRect = null;
+        });
+      }
+      return;
+    }
+    final rect14 = _rectForSlot('14');
+    final rect41 = _rectForSlot('41');
+    final rect24 = _rectForSlot('24');
+    final rect31 = _rectForSlot('31');
+    if (rect14 == null || rect41 == null || rect24 == null || rect31 == null) {
+      if (_lowerDeckMarker14 != null ||
+          _lowerDeckMarker41 != null ||
+          _lowerDeckSplitRect != null) {
+        setState(() {
+          _lowerDeckMarker14 = null;
+          _lowerDeckMarker41 = null;
+          _lowerDeckSplitRect = null;
+        });
+      }
+      return;
+    }
+    const thickness = 2.0;
+    final marker14 = Rect.fromLTWH(
+      rect14.right - thickness,
+      rect14.top,
+      thickness,
+      rect14.height,
+    );
+    final marker41 = Rect.fromLTWH(
+      rect41.right - thickness,
+      rect41.top,
+      thickness,
+      rect41.height,
+    );
+    final splitTop = (rect24.bottom + rect31.top) / 2 - thickness / 2;
+    final splitRect = Rect.fromLTWH(
+      rect24.left,
+      splitTop,
+      rect24.width,
+      thickness,
+    );
+    if (_lowerDeckMarker14 != marker14 ||
+        _lowerDeckMarker41 != marker41 ||
+        _lowerDeckSplitRect != splitRect) {
+      setState(() {
+        _lowerDeckMarker14 = marker14;
+        _lowerDeckMarker41 = marker41;
+        _lowerDeckSplitRect = splitRect;
       });
     }
   }
@@ -701,6 +766,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     WidgetRef ref,
     bool outbound,
   ) {
+    _slotKeys.clear();
     final deck = ref.watch(lowerDeckProvider);
     final slots = outbound ? deck.outboundSlots : deck.inboundSlots;
     const labels = [
@@ -732,11 +798,55 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         ),
       );
     }
-    return Center(
+    final grid = Center(
       child: SizedBox(
         width: _kSingleColumnWidth,
         child: Column(children: children),
       ),
+    );
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _repositionLowerDeckMarkers());
+    return Stack(
+      key: _gridKey,
+      children: [
+        grid,
+        if (_lowerDeckMarker14 != null)
+          Positioned(
+            left: _lowerDeckMarker14!.left,
+            top: _lowerDeckMarker14!.top,
+            child: IgnorePointer(
+              child: Container(
+                width: _lowerDeckMarker14!.width,
+                height: _lowerDeckMarker14!.height,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        if (_lowerDeckMarker41 != null)
+          Positioned(
+            left: _lowerDeckMarker41!.left,
+            top: _lowerDeckMarker41!.top,
+            child: IgnorePointer(
+              child: Container(
+                width: _lowerDeckMarker41!.width,
+                height: _lowerDeckMarker41!.height,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        if (_lowerDeckSplitRect != null)
+          Positioned(
+            left: _lowerDeckSplitRect!.left,
+            top: _lowerDeckSplitRect!.top,
+            child: IgnorePointer(
+              child: Container(
+                width: _lowerDeckSplitRect!.width,
+                height: _lowerDeckSplitRect!.height,
+                color: Colors.white,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -752,6 +862,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         outbound ? deck.outboundSlots[index] : deck.inboundSlots[index];
 
     return GestureDetector(
+      key: _slotKeys[label] ??= GlobalKey(),
       onLongPressStart: container == null
           ? (details) => showTransferMenu(
                 context: context,
