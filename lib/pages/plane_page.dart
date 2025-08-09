@@ -38,181 +38,195 @@ class PlanePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!Hive.isBoxOpen('planeBox')) {
-      return _buildNoPlaneScaffold();
-    }
+    try {
+      if (!Hive.isBoxOpen('planeBox')) {
+        return _buildNoPlaneScaffold();
+      }
 
-    final planes = ref.watch(planesProvider);
-    if (planes.isEmpty) {
-      return _buildNoPlaneScaffold();
-    }
+      final planes = ref.watch(planesProvider);
+      if (planes.isEmpty) {
+        return _buildNoPlaneScaffold();
+      }
 
-    final selectedId = ref.watch(selectedPlaneIdProvider);
-    final aircraft = ref.watch(aircraftProvider);
-    final planeState = ref.watch(planeProvider);
-    final isOutbound = ref.watch(isOutboundProvider);
-    final isLowerDeck = ref.watch(lowerDeckviewProvider);
-    final configs = planeState.configs;
-    final sequence =
-        isOutbound ? planeState.outboundSequence : planeState.inboundSequence;
+      final selectedId = ref.watch(selectedPlaneIdProvider);
+      final aircraft = ref.watch(aircraftProvider);
+      final planeState = ref.watch(planeProvider);
+      final isOutbound = ref.watch(isOutboundProvider);
+      final isLowerDeck = ref.watch(lowerDeckviewProvider);
+      final configs = planeState.configs;
+      final sequence =
+          isOutbound ? planeState.outboundSequence : planeState.inboundSequence;
 
-    LoadingSequence? selectedConfig;
-    if (sequence != null) {
-      try {
-        selectedConfig = configs.firstWhere((c) => c.label == sequence.label);
-      } catch (_) {}
-    }
+      LoadingSequence? selectedConfig;
+      if (sequence != null) {
+        try {
+          selectedConfig = configs.firstWhere((c) => c.label == sequence.label);
+        } catch (_) {
+          // Config not found, ignore
+        }
+      }
 
-    Plane? selectedPlane;
-    if (selectedId != null) {
-      try {
-        selectedPlane = planes.firstWhere((p) => p.id == selectedId);
-      } catch (_) {}
-    }
-    if (selectedPlane == null && planes.isNotEmpty) {
-      selectedPlane = planes.first;
-      ref.read(selectedPlaneIdProvider.notifier).state = selectedPlane.id;
-      final intialAircraft =
-          aircraft ??
-          aircraftList.firstWhere(
-            (a) => a.typeCode == selectedPlane?.aircraftTypeCode,
-            orElse: () => aircraftList.first,
-          );
-      ref.read(aircraftProvider.notifier).state = intialAircraft;
-      ref
-          .read(planeProvider.notifier)
-          .loadPlane(selectedPlane, intialAircraft.configs);
-      ref.read(lowerDeckProvider.notifier).loadFromPlane(selectedPlane);
-    }
+      Plane? selectedPlane;
+      if (selectedId != null && selectedId.isNotEmpty) {
+        try {
+          selectedPlane = planes.firstWhere((p) => p.id == selectedId);
+        } catch (_) {
+          // Plane not found, will set to first available below
+        }
+      }
+      
+      if (selectedPlane == null && planes.isNotEmpty) {
+        selectedPlane = planes.first;
+        // Safely update the selected plane ID
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(selectedPlaneIdProvider.notifier).state = selectedPlane!.id;
+          final initialAircraft =
+              aircraft ??
+              aircraftList.firstWhere(
+                (a) => a.typeCode == selectedPlane?.aircraftTypeCode,
+                orElse: () => aircraftList.first,
+              );
+          ref.read(aircraftProvider.notifier).state = initialAircraft;
+          ref
+              .read(planeProvider.notifier)
+              .loadPlane(selectedPlane, initialAircraft.configs);
+          ref.read(lowerDeckProvider.notifier).loadFromPlane(selectedPlane);
+        });
+      }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Plane'),
+      return Scaffold(
         backgroundColor: Colors.black,
-        actions: [
-          if (planes.isNotEmpty)
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    isLowerDeck ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.white,
+        appBar: AppBar(
+          title: const Text('Plane'),
+          backgroundColor: Colors.black,
+          actions: [
+            if (planes.isNotEmpty && selectedPlane != null)
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      isLowerDeck ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      ref.read(lowerDeckviewProvider.notifier).state =
+                          !isLowerDeck;
+                    },
                   ),
-                  onPressed: () {
-                    ref.read(lowerDeckviewProvider.notifier).state =
-                        !isLowerDeck;
-                  },
-                ),
-                DropdownButton<String>(
-                  value: selectedPlane?.id,
-                  underline: const SizedBox.shrink(),
-                  dropdownColor: Colors.black,
-                  items:
-                      planes
-                          .map(
-                            (p) => DropdownMenuItem(
-                              value: p.id,
-                              child: Text(
-                                p.name,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (val) {
-                    if (val == null) return;
-                    ref.read(selectedPlaneIdProvider.notifier).state = val;
-                    final plane = planes.firstWhere((p) => p.id == val);
-                    final aircraft = aircraftList.firstWhere(
-                      (a) => a.typeCode == plane.aircraftTypeCode,
-                      orElse: () => aircraftList.first,
-                    );
-                    ref
-                        .read(planeProvider.notifier)
-                        .loadPlane(plane, aircraft.configs);
-                    ref.read(lowerDeckProvider.notifier).loadFromPlane(plane);
-                    ref.read(aircraftProvider.notifier).state = aircraft;
-                  },
-                ),
-                if (configs.isNotEmpty) ...[
-                  const SizedBox(width: 12),
-                  DropdownButton<LoadingSequence>(
-                    value: selectedConfig,
+                  DropdownButton<String>(
+                    value: selectedPlane.id,
                     underline: const SizedBox.shrink(),
                     dropdownColor: Colors.black,
                     items:
-                        configs
+                        planes
                             .map(
-                              (c) => DropdownMenuItem(
-                                value: c,
+                              (p) => DropdownMenuItem(
+                                value: p.id,
                                 child: Text(
-                                  c.label,
+                                  p.name,
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               ),
                             )
                             .toList(),
-                    onChanged: (cfg) {
-                      if (cfg == null) return;
+                    onChanged: (val) {
+                      if (val == null) return;
+                      ref.read(selectedPlaneIdProvider.notifier).state = val;
+                      final plane = planes.firstWhere((p) => p.id == val);
+                      final aircraft = aircraftList.firstWhere(
+                        (a) => a.typeCode == plane.aircraftTypeCode,
+                        orElse: () => aircraftList.first,
+                      );
                       ref
                           .read(planeProvider.notifier)
-                          .selectSequence(cfg, outbound: isOutbound);
-                      final pid = selectedPlane?.id;
-                      if (pid != null) {
-                        final plane = planes.firstWhere((p) => p.id == pid);
-                        final updated = ref
-                            .read(planeProvider.notifier)
-                            .exportPlane(plane);
-                        ref.read(planesProvider.notifier).updatePlane(updated);
-                      }
+                          .loadPlane(plane, aircraft.configs);
+                      ref.read(lowerDeckProvider.notifier).loadFromPlane(plane);
+                      ref.read(aircraftProvider.notifier).state = aircraft;
                     },
                   ),
-                ],
-                const SizedBox(width: 12),
-                Row(
-                  children: [
-                    const Text(
-                      'Inbound',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    Switch(
-                      value: isOutbound,
-                      onChanged: (val) {
-                        ref.read(isOutboundProvider.notifier).state = val;
+                  if (configs.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    DropdownButton<LoadingSequence>(
+                      value: selectedConfig,
+                      underline: const SizedBox.shrink(),
+                      dropdownColor: Colors.black,
+                      items:
+                          configs
+                              .map(
+                                (c) => DropdownMenuItem(
+                                  value: c,
+                                  child: Text(
+                                    c.label,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (cfg) {
+                        if (cfg == null) return;
+                        ref
+                            .read(planeProvider.notifier)
+                            .selectSequence(cfg, outbound: isOutbound);
+                        final pid = selectedPlane?.id;
+                        if (pid != null) {
+                          final plane = planes.firstWhere((p) => p.id == pid);
+                          final updated = ref
+                              .read(planeProvider.notifier)
+                              .exportPlane(plane);
+                          ref.read(planesProvider.notifier).updatePlane(updated);
+                        }
                       },
                     ),
-                    const Text(
-                      'Outbound',
-                      style: TextStyle(color: Colors.white),
-                    ),
                   ],
-                ),
-              ],
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: aircraft == null || sequence == null
-                ? const Center(
-                    child: Text(
-                      'Please select a plane and configuration using the dropdowns above.',
-                      style: TextStyle(color: Colors.white70),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: slotPadding,
-                    child: isLowerDeck
-                        ? _buildLowerDeckLayout(context, ref, isOutbound)
-                        : _buildLayout(context, ref, sequence, isOutbound),
+                  const SizedBox(width: 12),
+                  Row(
+                    children: [
+                      const Text(
+                        'Inbound',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Switch(
+                        value: isOutbound,
+                        onChanged: (val) {
+                          ref.read(isOutboundProvider.notifier).state = val;
+                        },
+                      ),
+                      const Text(
+                        'Outbound',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
-          ),
-        ],
-      ),
-    );
+                ],
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: aircraft == null || sequence == null || selectedPlane == null
+                  ? const Center(
+                      child: Text(
+                        'Please select a plane and configuration using the dropdowns above.',
+                        style: TextStyle(color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: slotPadding,
+                      child: isLowerDeck
+                          ? _buildLowerDeckLayout(context, ref, isOutbound)
+                          : _buildLayout(context, ref, sequence, isOutbound),
+                    ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Catch any errors and show a safe fallback
+      print('Error in PlanePage: $e');
+      return _buildNoPlaneScaffold();
+    }
   }
 
   Widget _buildNoPlaneScaffold() {
@@ -708,16 +722,11 @@ class PlanePage extends ConsumerWidget {
           return 'B${index + 3}';
         case 'C':
           if (index == 0) return '1';
-          if (sequence.order.length == 24) {
-            if (index == 22) return 'R12';
-            if (index == 23) return 'A13';
-          } else if (index == sequence.order.length - 1) {
-            return 'A13';
-          }
+          if (index == sequence.order.length - 1) return 'A13';
           final adj = index - 1;
           final row = adj ~/ 2 + 2;
           final side = adj % 2 == 0 ? 'L' : 'R';
-          return '$side$row';
+          return '$row$side';
       }
     }
 
