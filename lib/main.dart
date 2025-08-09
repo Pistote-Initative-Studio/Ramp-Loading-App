@@ -38,6 +38,7 @@ void main() async {
     Hive.openBox('tugBox'),
     Hive.openBox('tugsBox'),
     Hive.openBox('uldBox'),
+    Hive.openBox('storageBox'),
   ]);
 
   runApp(const ProviderScope(child: MyApp()));
