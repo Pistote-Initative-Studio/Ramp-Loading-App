@@ -33,6 +33,10 @@ final List<Aircraft> aircraftList = [
 
 final lowerDeckviewProvider = StateProvider<bool>((ref) => false);
 
+// Width of a single column of ULD slots. Used to center single-column
+// layouts for both main deck and lower deck views.
+const double _kSingleColumnWidth = 100.0;
+
 class PlanePage extends ConsumerStatefulWidget {
   const PlanePage({super.key});
 
@@ -594,7 +598,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
           (sequence.label == 'A' || sequence.label == 'B')) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            const columnWidth = 100.0;
+            const columnWidth = _kSingleColumnWidth;
             final availableWidth = constraints.maxWidth;
             final centeredLeft = (availableWidth - columnWidth) / 2;
             return Padding(
@@ -728,7 +732,12 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         ),
       );
     }
-    return Column(children: children);
+    return Center(
+      child: SizedBox(
+        width: _kSingleColumnWidth,
+        child: Column(children: children),
+      ),
+    );
   }
 
   Widget _buildLowerDeckSlot(
