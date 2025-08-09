@@ -717,8 +717,8 @@ class PlanePage extends ConsumerWidget {
         case 'C':
           if (index == 0) return '1';
           if (sequence.order.length == 24) {
-            if (index == 22) return 'A13';
-            if (index == 23) return 'R12';
+            if (index == 22) return 'R12';
+            if (index == 23) return 'A13';
           } else if (index == sequence.order.length - 1) {
             return 'A13';
           }
