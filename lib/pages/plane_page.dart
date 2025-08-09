@@ -660,8 +660,10 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         ],
       );
     } else if (columns == 1) {
-      if (aircraft?.typeCode == 'B763' &&
-          (sequence.label == 'A' || sequence.label == 'B')) {
+      if ((aircraft?.typeCode == 'B763' &&
+              (sequence.label == 'A' || sequence.label == 'B')) ||
+          (aircraft?.typeCode == 'B762' &&
+              (sequence.label == 'C' || sequence.label == 'D'))) {
         return LayoutBuilder(
           builder: (context, constraints) {
             const columnWidth = _kSingleColumnWidth;
