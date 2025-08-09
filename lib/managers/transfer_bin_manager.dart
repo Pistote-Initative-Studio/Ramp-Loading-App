@@ -16,7 +16,8 @@ class TransferBinManager extends ChangeNotifier {
   static final TransferBinManager _instance = TransferBinManager._internal();
   static TransferBinManager get instance => _instance;
 
-  final Box _box = Hive.box('transferBox');
+  final Box _queueBox = Hive.box('transferBox');
+  final Box _slotsBox = Hive.box('storage_items');
   static const String _queueKey = 'queue';
   static const String _slotKey = 'slots';
 
@@ -24,11 +25,11 @@ class TransferBinManager extends ChangeNotifier {
   final Map<String, List<StorageContainer?>> _slots = {};
 
   TransferBinManager._internal() {
-    final storedQueue = _box.get(_queueKey);
+    final storedQueue = _queueBox.get(_queueKey);
     if (storedQueue != null && storedQueue is List) {
       _ulds = List<StorageContainer>.from(storedQueue);
     }
-    final storedSlots = _box.get(_slotKey);
+    final storedSlots = _slotsBox.get(_slotKey);
     if (storedSlots != null && storedSlots is Map) {
       for (final entry in storedSlots.entries) {
         _slots[entry.key] = List<StorageContainer?>.from(entry.value as List);
@@ -39,8 +40,8 @@ class TransferBinManager extends ChangeNotifier {
   List<StorageContainer> get ulds => List.unmodifiable(_ulds);
 
   void _save() {
-    _box.put(_queueKey, _ulds);
-    _box.put(_slotKey, _slots);
+    _queueBox.put(_queueKey, _ulds);
+    _slotsBox.put(_slotKey, _slots);
   }
 
   void addULD(StorageContainer uld) {
@@ -123,8 +124,7 @@ class TransferBinManager extends ChangeNotifier {
     for (int i = newSlotCount; i < slots.length; i++) {
       final c = slots[i];
       if (c != null) {
-        debugPrint(
-            'Moved ULD ${c.uld} from $pageId slot $i to transfer bin');
+        debugPrint('Moved ${c.id} to Transfer (index $i >= $newSlotCount)');
         containersToMove.add(c);
       }
     }

@@ -109,7 +109,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       'uldBox',
       'ballDeckBox',
       'transferBox',
-      'storageBox',
+      'storage_config',
+      'storage_items',
     ];
     for (final b in boxes) {
       if (!Hive.isBoxOpen(b)) {
@@ -152,7 +153,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     _ballDeckCount = ref.read(ballDeckProvider).slots.length;
     
     // Get the current storage slot count from the provider
-    _storageCount = ref.read(storageProvider.notifier).getCurrentSlotCount();
+    _storageCount = ref
+        .read(storageProvider.notifier)
+        .getCurrentSlotCount()
+        .clamp(0, 50);
 
     final planes = ref.read(planesProvider);
     _planeDrafts = planes.map((p) {

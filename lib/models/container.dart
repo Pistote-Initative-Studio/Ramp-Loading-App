@@ -3,6 +3,7 @@ import 'aircraft.dart';
 
 part 'container.g.dart';
 
+/// Serializable ULD container stored in Hive.
 @HiveType(typeId: 0)
 class StorageContainer extends HiveObject {
   @HiveField(0)
