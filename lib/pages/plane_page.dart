@@ -276,12 +276,28 @@ class _PlanePageState extends ConsumerState<PlanePage> {
                 height: _doorMarkerRect!.height,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(1.5),
                 ),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Rect? _rectForSlot(String slotId) {
+    final key = _slotKeys[slotId];
+    if (key?.currentContext == null || _gridKey.currentContext == null) {
+      return null;
+    }
+    final slotBox = key!.currentContext!.findRenderObject() as RenderBox;
+    final stackBox = _gridKey.currentContext!.findRenderObject() as RenderBox;
+    final slotPos = slotBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    return Rect.fromLTWH(
+      slotPos.dx,
+      slotPos.dy,
+      slotBox.size.width,
+      slotBox.size.height,
     );
   }
 
@@ -318,23 +334,20 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       }
       return;
     }
-    final key = _slotKeys[label];
-    if (key?.currentContext == null || _gridKey.currentContext == null) {
+    final slotRect = _rectForSlot(label);
+    if (slotRect == null) {
       if (_doorMarkerRect != null) {
         setState(() => _doorMarkerRect = null);
       }
       return;
     }
-    final slotBox = key!.currentContext!.findRenderObject() as RenderBox;
-    final stackBox = _gridKey.currentContext!.findRenderObject() as RenderBox;
-    final slotPos = slotBox.localToGlobal(Offset.zero, ancestor: stackBox);
-    const lineWidth = 4.0;
-    const lineGap = 8.0;
+    const doorWidth = 3.0;
+    const doorGap = 8.0;
     final rect = Rect.fromLTWH(
-      slotPos.dx - lineGap - lineWidth,
-      slotPos.dy,
-      lineWidth,
-      slotBox.size.height,
+      slotRect.left - doorGap - doorWidth,
+      slotRect.top,
+      doorWidth,
+      slotRect.height,
     );
     if (_doorMarkerRect != rect) {
       setState(() {
