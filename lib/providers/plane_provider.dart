@@ -70,14 +70,28 @@ class PlaneNotifier extends StateNotifier<PlaneState> {
       plane.outboundSequenceLabel,
       plane.outboundSequenceOrder,
     );
+    final lowerRequired = plane.aircraftTypeCode == 'B762' ? 11 : 15;
+    var lowerInbound = List<StorageContainer?>.from(plane.lowerInboundSlots);
+    var lowerOutbound = List<StorageContainer?>.from(plane.lowerOutboundSlots);
+    if (lowerInbound.length < lowerRequired) {
+      lowerInbound.addAll(List.filled(lowerRequired - lowerInbound.length, null));
+    } else if (lowerInbound.length > lowerRequired) {
+      lowerInbound = lowerInbound.sublist(0, lowerRequired);
+    }
+    if (lowerOutbound.length < lowerRequired) {
+      lowerOutbound
+          .addAll(List.filled(lowerRequired - lowerOutbound.length, null));
+    } else if (lowerOutbound.length > lowerRequired) {
+      lowerOutbound = lowerOutbound.sublist(0, lowerRequired);
+    }
     state = PlaneState(
       inboundSequence: inboundSequence,
       outboundSequence: outboundSequence,
       configs: configs,
       inboundSlots: List.from(plane.inboundSlots),
       outboundSlots: List.from(plane.outboundSlots),
-      lowerInboundSlots: List.from(plane.lowerInboundSlots),
-      lowerOutboundSlots: List.from(plane.lowerOutboundSlots),
+      lowerInboundSlots: lowerInbound,
+      lowerOutboundSlots: lowerOutbound,
     );
   }
 

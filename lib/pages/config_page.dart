@@ -395,8 +395,14 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       outboundSequenceLabel: cfg.label,
       outboundSequenceOrder: cfg.order,
       outboundSlots: List<model.StorageContainer?>.filled(cfg.order.length, null),
-      lowerInboundSlots: const [],
-      lowerOutboundSlots: const [],
+      lowerInboundSlots: List<model.StorageContainer?>.filled(
+        ac.typeCode == 'B762' ? 11 : 15,
+        null,
+      ),
+      lowerOutboundSlots: List<model.StorageContainer?>.filled(
+        ac.typeCode == 'B762' ? 11 : 15,
+        null,
+      ),
     );
 
     final planes = ref.read(planesProvider);
