@@ -590,6 +590,36 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         ],
       );
     } else if (columns == 1) {
+      if (aircraft?.typeCode == 'B763' &&
+          (sequence.label == 'A' || sequence.label == 'B')) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const columnWidth = 100.0;
+            final availableWidth = constraints.maxWidth;
+            final centeredLeft = (availableWidth - columnWidth) / 2;
+            return Padding(
+              padding: EdgeInsets.only(left: centeredLeft),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(slots.length, (i) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
+                    ),
+                    child: _buildSlot(
+                      context,
+                      ref,
+                      i,
+                      _slotLabel(ref, sequence, i),
+                      outbound,
+                    ),
+                  );
+                }),
+              ),
+            );
+          },
+        );
+      }
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(slots.length, (i) {
