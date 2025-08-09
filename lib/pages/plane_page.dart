@@ -663,7 +663,9 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       if ((aircraft?.typeCode == 'B763' &&
               (sequence.label == 'A' || sequence.label == 'B')) ||
           (aircraft?.typeCode == 'B762' &&
-              (sequence.label == 'C' || sequence.label == 'D'))) {
+              (sequence.label == 'C' ||
+                  sequence.label == 'D' ||
+                  sequence.label == 'E'))) {
         return LayoutBuilder(
           builder: (context, constraints) {
             const columnWidth = _kSingleColumnWidth;
@@ -711,56 +713,33 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       );
     }
 
-    // Fallback for future configurations.
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                children: List.generate(9, (i) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(
-                      context,
-                      ref,
-                      i * 2,
-                      '${i + 1}L',
-                      outbound,
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                children: List.generate(9, (i) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: slotRunSpacing),
-                    child: _buildSlot(
-                      context,
-                      ref,
-                      i * 2 + 1,
-                      '${i + 1}R',
-                      outbound,
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _buildSlot(
-          context,
-          ref,
-          18,
-          'A10',
-          outbound,
-        ),
-      ],
+    // Fallback for future configurations: display slots in a centered column.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const columnWidth = _kSingleColumnWidth;
+        final availableWidth = constraints.maxWidth;
+        final centeredLeft = (availableWidth - columnWidth) / 2;
+        return Padding(
+          padding: EdgeInsets.only(left: centeredLeft),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(slots.length, (i) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: i == slots.length - 1 ? 0 : slotRunSpacing,
+                ),
+                child: _buildSlot(
+                  context,
+                  ref,
+                  i,
+                  _slotLabel(ref, sequence, i),
+                  outbound,
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 
@@ -974,7 +953,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
   int _columnCount(LoadingSequence sequence) {
     final count = sequence.order.length;
     if (count >= 18) return 2; // e.g. 767-200 config A or 767-300 config C
-    if (count <= 10 || count == 13 || count == 17) return 1;
+    if (count <= 10 || count == 12 || count == 13 || count == 17) return 1;
     return 0;
   }
 
@@ -994,6 +973,10 @@ class _PlanePageState extends ConsumerState<PlanePage> {
           final side = adj % 2 == 0 ? 'L' : 'R';
           return '$row$side';
       }
+    }
+
+    if (aircraft?.typeCode == 'B762' && sequence.label == 'E') {
+      return '${index + 1}';
     }
 
     if (sequence.order.length >= 21 && index == 20) return 'A11';
