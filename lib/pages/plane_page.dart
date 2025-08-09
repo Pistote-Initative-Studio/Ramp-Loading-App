@@ -241,9 +241,23 @@ class PlanePage extends ConsumerWidget {
     final aircraft = ref.watch(aircraftProvider);
 
     if (aircraft?.typeCode == 'B763' && sequence.label == 'C') {
-      final pairCount = (slots.length - 4) ~/ 2;
+      // For 767-300 Config C: 1 at top, 2L-12L and 2R-12R in columns, A13 at bottom
+      final leftColumnSlots = <int>[];
+      final rightColumnSlots = <int>[];
+      
+      // Build left column (2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L)
+      for (int i = 1; i < slots.length - 1; i += 2) {
+        leftColumnSlots.add(i);
+      }
+      
+      // Build right column (2R, 3R, 4R, 5R, 6R, 7R, 8R, 9R, 10R, 11R, 12R)  
+      for (int i = 2; i < slots.length - 1; i += 2) {
+        rightColumnSlots.add(i);
+      }
+      
       return Column(
         children: [
+          // Slot 1 at top
           _buildSlot(
             context,
             ref,
@@ -252,16 +266,18 @@ class PlanePage extends ConsumerWidget {
             outbound,
           ),
           SizedBox(height: slotRunSpacing),
+          
+          // Two columns: Left (2L-12L) and Right (2R-12R)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
-                  children: List.generate(pairCount, (i) {
-                    final index = i * 2 + 1;
+                  children: leftColumnSlots.map((index) {
+                    final isLast = index == leftColumnSlots.last;
                     return Padding(
                       padding: EdgeInsets.only(
-                        bottom: i == pairCount - 1 ? 0 : slotRunSpacing,
+                        bottom: isLast ? 0 : slotRunSpacing,
                       ),
                       child: _buildSlot(
                         context,
@@ -271,17 +287,17 @@ class PlanePage extends ConsumerWidget {
                         outbound,
                       ),
                     );
-                  }),
+                  }).toList(),
                 ),
               ),
               SizedBox(width: slotSpacing),
               Expanded(
                 child: Column(
-                  children: List.generate(pairCount, (i) {
-                    final index = i * 2 + 2;
+                  children: rightColumnSlots.map((index) {
+                    final isLast = index == rightColumnSlots.last;
                     return Padding(
                       padding: EdgeInsets.only(
-                        bottom: i == pairCount - 1 ? 0 : slotRunSpacing,
+                        bottom: isLast ? 0 : slotRunSpacing,
                       ),
                       child: _buildSlot(
                         context,
@@ -291,44 +307,20 @@ class PlanePage extends ConsumerWidget {
                         outbound,
                       ),
                     );
-                  }),
+                  }).toList(),
                 ),
               ),
             ],
           ),
           SizedBox(height: slotRunSpacing),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSlot(
-                  context,
-                  ref,
-                  pairCount * 2 + 1,
-                  _slotLabel(ref, sequence, pairCount * 2 + 1),
-                  outbound,
-                ),
-              ),
-              SizedBox(width: slotSpacing),
-              Expanded(
-                child: _buildSlot(
-                  context,
-                  ref,
-                  pairCount * 2 + 2,
-                  _slotLabel(ref, sequence, pairCount * 2 + 2),
-                  outbound,
-                ),
-              ),
-              SizedBox(width: slotSpacing),
-              Expanded(
-                child: _buildSlot(
-                  context,
-                  ref,
-                  pairCount * 2 + 3,
-                  _slotLabel(ref, sequence, pairCount * 2 + 3),
-                  outbound,
-                ),
-              ),
-            ],
+          
+          // A13 at bottom (centered)
+          _buildSlot(
+            context,
+            ref,
+            slots.length - 1,
+            _slotLabel(ref, sequence, slots.length - 1),
+            outbound,
           ),
         ],
       );
