@@ -12,6 +12,7 @@ import '../widgets/color_palette.dart';
 import '../widgets/transfer_menu.dart';
 import '../widgets/transfer_area.dart';
 import '../utils/uld_mover.dart';
+import '../theme/layout_constants.dart';
 
 class _TrainDraft {
   String id;
@@ -156,15 +157,20 @@ class _TrainPageState extends ConsumerState<TrainPage>
     const topBarHeight = 60.0;
 
     final media = MediaQuery.of(context);
+    final bottomPadding = kTransferBinHeight +
+        MediaQuery.viewPaddingOf(context).bottom +
+        kBottomScrollBuffer;
     final availableHeight = media.size.height -
         media.padding.top -
         topBarHeight -
         kTextTabBarHeight -
-        60;
+        kTransferBinHeight -
+        media.padding.bottom;
     final listHeight = availableHeight - 72;
 
     return Scaffold(
       backgroundColor: Colors.black,
+      bottomNavigationBar: const TransferArea(),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -224,6 +230,7 @@ class _TrainPageState extends ConsumerState<TrainPage>
           ),
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: bottomPadding),
               child: Column(
                 children: [
                   Container(
@@ -272,7 +279,6 @@ class _TrainPageState extends ConsumerState<TrainPage>
               ),
             ),
           ),
-          const SizedBox(height: 60, child: TransferArea()),
         ],
       ),
     ),
@@ -304,8 +310,11 @@ class _TrainPageState extends ConsumerState<TrainPage>
   }
 
   Widget _buildDollyStack(BuildContext context, Train train) {
+    final bottomPadding = kTransferBinHeight +
+        MediaQuery.viewPaddingOf(context).bottom +
+        kBottomScrollBuffer;
     return ListView.builder(
-      padding: EdgeInsets.zero,
+      padding: EdgeInsets.only(bottom: bottomPadding),
       itemCount: train.dollyCount,
       itemBuilder: (context, index) {
         final dolly = train.dollys[index];
