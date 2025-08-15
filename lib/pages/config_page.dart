@@ -256,7 +256,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   type: SizeEnum.Custom,
                   size: SizeEnum.PAG_88x125,
                   weightKg: 0,
-                  hasDangerousGoods: false,
+                  dangerousGoods: false,
                   colorIndex: 0,
                 );
                 switch (destination) {

@@ -42,7 +42,7 @@ class _UldChipState extends State<UldChip> {
     if (confirm != true) return;
 
     setState(() {
-      widget.uld.hasDangerousGoods = value;
+      widget.uld.dangerousGoods = value;
     });
     //persist change if object is backed by Hive
     try {
@@ -52,7 +52,7 @@ class _UldChipState extends State<UldChip> {
 
   @override
   Widget build(BuildContext context) {
-    final hasDg = widget.uld.hasDangerousGoods;
+    final hasDg = widget.uld.dangerousGoods;
 
     final inner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
