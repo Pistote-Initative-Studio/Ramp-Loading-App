@@ -82,7 +82,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
   final Map<String, GlobalKey> _slotKeys = {};
   Rect? _doorMarkerRect;
   Rect? _lowerDeckMarker14;
-  Rect? _lowerDeckMarker41;
+  Rect? _lowerDeckMarkerDoor;
   Rect? _lowerDeckSplitRect;
 
   @override
@@ -421,11 +421,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     final type = aircraft?.typeCode;
     if (!isLowerDeck || (type != 'B763' && type != 'B762')) {
       if (_lowerDeckMarker14 != null ||
-          _lowerDeckMarker41 != null ||
+          _lowerDeckMarkerDoor != null ||
           _lowerDeckSplitRect != null) {
         setState(() {
           _lowerDeckMarker14 = null;
-          _lowerDeckMarker41 = null;
+          _lowerDeckMarkerDoor = null;
           _lowerDeckSplitRect = null;
         });
       }
@@ -437,16 +437,16 @@ class _PlanePageState extends ConsumerState<PlanePage> {
 
     if (type == 'B763') {
       final rect14 = _rectForSlot('14');
-      final rect41 = _rectForSlot('41');
+      final rect42 = _rectForSlot('42');
       final rect24 = _rectForSlot('24');
       final rect31 = _rectForSlot('31');
-      if (rect14 == null || rect41 == null || rect24 == null || rect31 == null) {
+      if (rect14 == null || rect42 == null || rect24 == null || rect31 == null) {
         if (_lowerDeckMarker14 != null ||
-            _lowerDeckMarker41 != null ||
+            _lowerDeckMarkerDoor != null ||
             _lowerDeckSplitRect != null) {
           setState(() {
             _lowerDeckMarker14 = null;
-            _lowerDeckMarker41 = null;
+            _lowerDeckMarkerDoor = null;
             _lowerDeckSplitRect = null;
           });
         }
@@ -458,11 +458,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         thickness,
         rect14.height,
       );
-      final marker41 = Rect.fromLTWH(
-        rect41.right + offset,
-        rect41.top,
+      final markerDoor = Rect.fromLTWH(
+        rect42.right + offset,
+        rect42.top,
         thickness,
-        rect41.height,
+        rect42.height,
       );
       final splitTop = (rect24.bottom + rect31.top) / 2 - thickness / 2;
       final splitRect = Rect.fromLTWH(
@@ -472,11 +472,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         thickness,
       );
       if (_lowerDeckMarker14 != marker14 ||
-          _lowerDeckMarker41 != marker41 ||
+          _lowerDeckMarkerDoor != markerDoor ||
           _lowerDeckSplitRect != splitRect) {
         setState(() {
           _lowerDeckMarker14 = marker14;
-          _lowerDeckMarker41 = marker41;
+          _lowerDeckMarkerDoor = markerDoor;
           _lowerDeckSplitRect = splitRect;
         });
       }
@@ -490,11 +490,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     final rect3ac = _rectForSlot('3AC');
     if (rect2dc == null || rect4dc == null || rect2fc == null || rect3ac == null) {
       if (_lowerDeckMarker14 != null ||
-          _lowerDeckMarker41 != null ||
+          _lowerDeckMarkerDoor != null ||
           _lowerDeckSplitRect != null) {
         setState(() {
           _lowerDeckMarker14 = null;
-          _lowerDeckMarker41 = null;
+          _lowerDeckMarkerDoor = null;
           _lowerDeckSplitRect = null;
         });
       }
@@ -506,7 +506,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       thickness,
       rect2dc.height,
     );
-    final marker4dc = Rect.fromLTWH(
+    final markerDoor = Rect.fromLTWH(
       rect4dc.right + offset,
       rect4dc.top,
       thickness,
@@ -520,11 +520,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
       thickness,
     );
     if (_lowerDeckMarker14 != marker2dc ||
-        _lowerDeckMarker41 != marker4dc ||
+        _lowerDeckMarkerDoor != markerDoor ||
         _lowerDeckSplitRect != splitRect) {
       setState(() {
         _lowerDeckMarker14 = marker2dc;
-        _lowerDeckMarker41 = marker4dc;
+        _lowerDeckMarkerDoor = markerDoor;
         _lowerDeckSplitRect = splitRect;
       });
     }
@@ -894,14 +894,14 @@ class _PlanePageState extends ConsumerState<PlanePage> {
               ),
             ),
           ),
-        if (_lowerDeckMarker41 != null)
+        if (_lowerDeckMarkerDoor != null)
           Positioned(
-            left: _lowerDeckMarker41!.left,
-            top: _lowerDeckMarker41!.top,
+            left: _lowerDeckMarkerDoor!.left,
+            top: _lowerDeckMarkerDoor!.top,
             child: IgnorePointer(
               child: Container(
-                width: _lowerDeckMarker41!.width,
-                height: _lowerDeckMarker41!.height,
+                width: _lowerDeckMarkerDoor!.width,
+                height: _lowerDeckMarkerDoor!.height,
                 color: Colors.white,
               ),
             ),
