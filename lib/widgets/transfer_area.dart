@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
 import '../providers/transfer_bin_provider.dart';
 import '../utils/uld_mover.dart';
+import '../theme/layout_constants.dart';
 
 class TransferArea extends ConsumerWidget {
   const TransferArea({super.key});
@@ -23,22 +24,25 @@ class TransferArea extends ConsumerWidget {
       },
       builder: (context, cand, rej) {
         final isActive = cand.isNotEmpty;
-        return Container(
-          height: 48,
-          color: Colors.grey[850],
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.inbox, color: isActive ? Colors.yellow : Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'Transfer (${queue.length})',
-                style: TextStyle(
-                  color: isActive ? Colors.yellow : Colors.white,
+        return SizedBox(
+          height: kTransferBinHeight,
+          child: Container(
+            color: Colors.grey[850],
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.inbox,
+                    color: isActive ? Colors.yellow : Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'Transfer (${queue.length})',
+                  style: TextStyle(
+                    color: isActive ? Colors.yellow : Colors.white,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
