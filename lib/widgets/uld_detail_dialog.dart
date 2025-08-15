@@ -29,7 +29,7 @@ class UldDetailDialog extends StatelessWidget {
             children: [
               const Text('DG', style: TextStyle(color: Colors.white)),
               Checkbox(
-                value: container.hasDangerousGoods,
+                value: container.dangerousGoods,
                 activeColor: Colors.amber,
                 checkColor: Colors.black,
                 onChanged: (checked) async {
@@ -61,7 +61,7 @@ class UldDetailDialog extends StatelessWidget {
                     );
                     if (confirm != true) return;
                   }
-                  container.hasDangerousGoods = checked ?? false;
+                  container.dangerousGoods = checked ?? false;
                   onUpdate();
                   if (!context.mounted) return;
                   Navigator.pop(context);

@@ -18,7 +18,9 @@ import 'widgets/transfer_area.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(model.StorageContainerAdapter());
+  if (!Hive.isAdapterRegistered(model.kStorageContainerTypeId)) {
+    Hive.registerAdapter(model.StorageContainerAdapter());
+  }
   Hive.registerAdapter(TrainAdapter());
   Hive.registerAdapter(DollyAdapter());
   Hive.registerAdapter(TugAdapter());

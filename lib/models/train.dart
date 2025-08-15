@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:ramp_loader_app/models/container.dart';
+import 'container.dart';
 
 part 'train.g.dart';
 
