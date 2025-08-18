@@ -17,6 +17,9 @@ import '../providers/tug_provider.dart';
 import '../widgets/color_picker_dialog.dart';
 import '../widgets/color_palette.dart';
 import '../managers/transfer_bin_manager.dart';
+import '../ads/ads_controller.dart';
+import '../widgets/transfer_bin.dart';
+import '../theme/layout_constants.dart';
 
 /// Draft object used to edit train/tug configuration in the UI.
 class _TrainDraft {
@@ -475,10 +478,16 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
+        final ads = AdsController.instance;
+        final bottomPadding = (ads.bannerVisible ? kBannerHeight : 0) +
+            kTransferBinHeight +
+            MediaQuery.viewPaddingOf(context).bottom +
+            kBottomBuffer;
         return Scaffold(
           appBar: AppBar(title: const Text('Config')),
           body: ListView(
-            padding: const EdgeInsets.all(16),
+            padding:
+                const EdgeInsets.all(16).add(EdgeInsets.only(bottom: bottomPadding)),
             children: [
               const Text('Plane Configuration'),
               _planeDrafts.isEmpty

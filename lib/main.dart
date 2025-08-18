@@ -8,12 +8,9 @@ import 'models/train.dart';
 import 'models/tug.dart';
 import 'models/plane.dart';
 import 'providers/ball_deck_provider.dart';
-import 'pages/train_page.dart';
-import 'pages/ball_deck_page.dart';
-import 'pages/plane_page.dart';
-import 'pages/config_page.dart';
-import 'pages/storage_page.dart';
-import 'widgets/transfer_area.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'ads/ads_controller.dart';
+import 'shell/app_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +41,9 @@ void main() async {
     Hive.openBox('storage_items'),
   ]);
 
+  await MobileAds.instance.initialize();
+  await AdsController.instance.initialize();
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -72,76 +72,7 @@ class MyApp extends StatelessWidget {
           onSurface: Colors.white,
         ),
       ),
-      home: const HomeNav(),
-    );
-  }
-}
-
-class HomeNav extends StatefulWidget {
-  const HomeNav({super.key});
-
-  @override
-  State<HomeNav> createState() => HomeNavState();
-}
-
-class HomeNavState extends State<HomeNav> {
-  final PageController _controller = PageController();
-  int page = 0;
-
-  final tabs = const [
-    ConfigPage(),
-    BallDeckPage(),
-    TrainPage(),
-    PlanePage(),
-    StoragePage(),
-  ];
-
-  void jumpToPage(int index) {
-    setState(() {
-      page = index;
-    });
-    _controller.jumpToPage(index);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: _controller,
-        physics: const NeverScrollableScrollPhysics(),
-        children: tabs,
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (page != 0 && page != 2) const TransferArea(),
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.white, width: 1)),
-            ),
-            child: BottomNavigationBar(
-              backgroundColor: Colors.black,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.white70,
-              currentIndex: page,
-              onTap: jumpToPage,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings),
-                  label: 'Config',
-                ),
-                BottomNavigationBarItem(icon: Icon(Icons.grid_on), label: 'Deck'),
-                BottomNavigationBarItem(icon: Icon(Icons.train), label: 'Trains'),
-                BottomNavigationBarItem(icon: Icon(Icons.flight), label: 'Plane'),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.warehouse),
-                  label: 'Storage',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      home: const AppShell(),
     );
   }
 }

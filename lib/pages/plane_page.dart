@@ -14,6 +14,9 @@ import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
 import '../utils/uld_mover.dart';
+import '../ads/ads_controller.dart';
+import '../widgets/transfer_bin.dart';
+import '../theme/layout_constants.dart';
 
 final List<Aircraft> aircraftList = [
   Aircraft('B762', 'Boeing 767-200 Freighter', [], [
@@ -144,6 +147,12 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         });
       }
 
+      final ads = AdsController.instance;
+      final bottomPadding = (ads.bannerVisible ? kBannerHeight : 0) +
+          kTransferBinHeight +
+          MediaQuery.viewPaddingOf(context).bottom +
+          kBottomBuffer;
+
       return Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -263,7 +272,8 @@ class _PlanePageState extends ConsumerState<PlanePage> {
                       ),
                     )
                   : SingleChildScrollView(
-                      padding: slotPadding,
+                      padding:
+                          slotPadding.add(EdgeInsets.only(bottom: bottomPadding)),
                       child: isLowerDeck
                           ? _buildLowerDeckLayout(context, ref, isOutbound)
                           : _buildMainDeckWithDoor(context, ref, sequence, isOutbound),

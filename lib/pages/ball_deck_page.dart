@@ -11,6 +11,9 @@ import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
 import '../utils/uld_mover.dart';
 import '../utils/duplicate_checker.dart';
+import '../ads/ads_controller.dart';
+import '../widgets/transfer_bin.dart';
+import '../theme/layout_constants.dart';
 
 class BallDeckPage extends ConsumerWidget {
   const BallDeckPage({super.key});
@@ -18,6 +21,11 @@ class BallDeckPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ballDeck = ref.watch(ballDeckProvider);
+    final ads = AdsController.instance;
+    final bottomPadding = (ads.bannerVisible ? kBannerHeight : 0) +
+        kTransferBinHeight +
+        MediaQuery.viewPaddingOf(context).bottom +
+        kBottomBuffer;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ball Deck')),
@@ -25,10 +33,9 @@ class BallDeckPage extends ConsumerWidget {
       body: Column(
         children: [
           Expanded(
-            child: Padding(
-              padding: slotPadding,
-              child: SingleChildScrollView(
-                child: Column(
+            child: SingleChildScrollView(
+              padding: slotPadding.add(EdgeInsets.only(bottom: bottomPadding)),
+              child: Column(
             children: List.generate(ballDeck.slots.length, (index) {
               final slotUld = ballDeck.slots[index];
               final overflowStartIndex = index * 2;

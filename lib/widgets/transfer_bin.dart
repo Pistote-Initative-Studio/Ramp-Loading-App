@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/container.dart';
 import '../providers/transfer_bin_provider.dart';
 import '../utils/uld_mover.dart';
-import '../theme/layout_constants.dart';
 
-class TransferArea extends ConsumerWidget {
-  const TransferArea({super.key});
+const double kTransferBinHeight = 48.0;
+
+class TransferBin extends ConsumerWidget {
+  const TransferBin({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,10 +17,7 @@ class TransferArea extends ConsumerWidget {
     return DragTarget<StorageContainer>(
       onAcceptWithDetails: (details) {
         final c = details.data;
-        // Remove the ULD from wherever it currently resides
         removeFromAll(ref, c);
-
-        // Finally add it to the transfer queue
         ref.read(transferBinProvider).addULD(c);
       },
       builder: (context, cand, rej) {
