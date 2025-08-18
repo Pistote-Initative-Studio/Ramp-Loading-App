@@ -9,6 +9,9 @@ import '../widgets/uld_chip.dart';
 import '../widgets/slot_layout_constants.dart';
 import '../widgets/transfer_menu.dart';
 import '../utils/uld_mover.dart';
+import '../ads/ads_controller.dart';
+import '../widgets/transfer_bin.dart';
+import '../theme/layout_constants.dart';
 
 class StoragePage extends ConsumerWidget {
   const StoragePage({super.key});
@@ -29,12 +32,18 @@ class StoragePage extends ConsumerWidget {
           final count = box.get('slotCount', defaultValue: 0) as int;
           debugPrint('Storage build with slotCount=$count');
           final slots = ref.watch(storageProvider);
+          final ads = AdsController.instance;
+          final bottomPadding = (ads.bannerVisible ? kBannerHeight : 0) +
+              kTransferBinHeight +
+              MediaQuery.viewPaddingOf(context).bottom +
+              kBottomBuffer;
 
           return Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: slotPadding,
+                  padding:
+                      slotPadding.add(EdgeInsets.only(bottom: bottomPadding)),
                   child: Wrap(
                     spacing: slotSpacing,
                     runSpacing: slotRunSpacing,

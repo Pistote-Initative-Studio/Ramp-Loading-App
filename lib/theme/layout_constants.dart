@@ -1,2 +1,1 @@
-const double kTransferBinHeight = 48.0;
-const double kBottomScrollBuffer = 16.0;
+const double kBottomBuffer = 16.0;
