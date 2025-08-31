@@ -78,41 +78,29 @@ class _UldChipState extends State<UldChip> {
     Widget decorated;
 
     if (hasDg && hasPallets) {
-      decorated = Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
+      decorated = DottedBorder(
+        color: Colors.red,
+        strokeWidth: 2,
+        dashPattern: const [4, 4],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(8),
         child: DottedBorder(
           color: Colors.blue,
           strokeWidth: 2,
           dashPattern: const [4, 4],
           borderType: BorderType.RRect,
           radius: const Radius.circular(8),
-          child: DottedBorder(
-            color: Colors.white,
-            strokeWidth: 2,
-            dashPattern: const [4, 4],
-            borderType: BorderType.RRect,
-            radius: const Radius.circular(8),
-            child: inner,
-          ),
+          child: inner,
         ),
       );
     } else if (hasDg) {
-      decorated = Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: DottedBorder(
-          color: Colors.white,
-          strokeWidth: 2,
-          dashPattern: const [4, 4],
-          borderType: BorderType.RRect,
-          radius: const Radius.circular(8),
-          child: inner,
-        ),
+      decorated = DottedBorder(
+        color: Colors.red,
+        strokeWidth: 2,
+        dashPattern: const [4, 4],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(8),
+        child: inner,
       );
     } else if (hasPallets) {
       decorated = DottedBorder(
