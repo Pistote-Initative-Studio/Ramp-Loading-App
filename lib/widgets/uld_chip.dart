@@ -89,14 +89,37 @@ class _UldChipState extends State<UldChip> {
   Widget build(BuildContext context) {
     final hasDg = widget.uld.dangerousGoods;
     final hasPallets = widget.uld.hasPallets;
-
     final inner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       alignment: Alignment.center,
-      child: Text(
-        widget.uld.uld,
-        style: const TextStyle(fontSize: 12, color: Colors.white),
-        textAlign: TextAlign.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildIndicator(
+                value: hasPallets,
+                onChanged: _togglePallets,
+                activeColor: Colors.blue,
+                label: 'P',
+              ),
+              _buildIndicator(
+                value: hasDg,
+                onChanged: _toggleDg,
+                activeColor: Colors.red,
+                label: 'DG',
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.uld.uld,
+            style: const TextStyle(fontSize: 12, color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
 
@@ -147,30 +170,6 @@ class _UldChipState extends State<UldChip> {
       );
     }
 
-    return Stack(
-      children: [
-        decorated,
-        Positioned(
-          top: -4,
-          left: -4,
-          child: _buildIndicator(
-            value: hasPallets,
-            onChanged: _togglePallets,
-            activeColor: Colors.blue,
-            label: 'P',
-          ),
-        ),
-        Positioned(
-          top: -4,
-          right: -4,
-          child: _buildIndicator(
-            value: hasDg,
-            onChanged: _toggleDg,
-            activeColor: Colors.red,
-            label: 'DG',
-          ),
-        ),
-      ],
-    );
+    return decorated;
   }
 }
