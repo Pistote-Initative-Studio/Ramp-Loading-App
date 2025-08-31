@@ -96,7 +96,7 @@ class _UldChipState extends State<UldChip> {
               onChanged: _togglePallets,
               activeColor: Colors.blue,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             _buildCheckbox(
               value: hasDg,
               onChanged: _toggleDg,
