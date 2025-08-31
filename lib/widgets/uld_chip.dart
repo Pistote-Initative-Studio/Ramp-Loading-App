@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import '../models/container.dart' as model;
 
+// Fixed size for a single ULD slot.
+const double _kChipSize = 100.0;
+
 class UldChip extends StatefulWidget {
   final model.StorageContainer uld;
   const UldChip(this.uld, {super.key});
@@ -89,38 +92,42 @@ class _UldChipState extends State<UldChip> {
   Widget build(BuildContext context) {
     final hasDg = widget.uld.dangerousGoods;
     final hasPallets = widget.uld.hasPallets;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildIndicator(
+              value: hasPallets,
+              onChanged: _togglePallets,
+              activeColor: Colors.blue,
+              label: 'P',
+            ),
+            const SizedBox(width: 8),
+            _buildIndicator(
+              value: hasDg,
+              onChanged: _toggleDg,
+              activeColor: Colors.red,
+              label: 'DG',
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          widget.uld.uld,
+          style: const TextStyle(fontSize: 12, color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+
     final inner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildIndicator(
-                value: hasPallets,
-                onChanged: _togglePallets,
-                activeColor: Colors.blue,
-                label: 'P',
-              ),
-              _buildIndicator(
-                value: hasDg,
-                onChanged: _toggleDg,
-                activeColor: Colors.red,
-                label: 'DG',
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.uld.uld,
-            style: const TextStyle(fontSize: 12, color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+      child: content,
     );
 
     Widget decorated;
@@ -170,6 +177,10 @@ class _UldChipState extends State<UldChip> {
       );
     }
 
-    return decorated;
+    return SizedBox(
+      width: _kChipSize,
+      height: _kChipSize,
+      child: decorated,
+    );
   }
 }
