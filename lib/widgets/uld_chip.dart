@@ -96,7 +96,7 @@ class _UldChipState extends State<UldChip> {
               onChanged: _togglePallets,
               activeColor: Colors.blue,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             _buildCheckbox(
               value: hasDg,
               onChanged: _toggleDg,
@@ -106,12 +106,15 @@ class _UldChipState extends State<UldChip> {
         ),
         const SizedBox(height: 4),
         Flexible(
-          child: Text(
-            widget.uld.uld,
-            style: const TextStyle(fontSize: 12, color: Colors.white),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            child: Text(
+              widget.uld.uld,
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
       ],
@@ -119,9 +122,12 @@ class _UldChipState extends State<UldChip> {
 
     final inner = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: content,
+      child: SizedBox(
+        height: 70,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 60, maxHeight: 70),
+          child: content,
+        ),
       ),
     );
 
