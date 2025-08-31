@@ -36,32 +36,44 @@ class UldDetailDialog extends StatelessWidget {
                   if (checked == true) {
                     final confirm = await showDialog<bool>(
                       context: context,
-                      builder:
-                          (_) => AlertDialog(
-                            backgroundColor: Colors.black,
-                            title: const Text(
-                              'Confirm',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            content: const Text(
-                              'Are you sure you want to mark this ULD as Dangerous Goods?',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Confirm'),
-                              ),
-                            ],
+                      builder: (_) => AlertDialog(
+                        backgroundColor: Colors.black,
+                        title: const Text(
+                          'Confirm',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        content: const Text(
+                          'Are you sure you want to mark this ULD as Dangerous Goods?',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
                           ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Confirm'),
+                          ),
+                        ],
+                      ),
                     );
                     if (confirm != true) return;
                   }
                   container.dangerousGoods = checked ?? false;
+                  onUpdate();
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(width: 16),
+              const Text('P', style: TextStyle(color: Colors.white)),
+              Checkbox(
+                value: container.hasPallets,
+                activeColor: Colors.blue,
+                checkColor: Colors.white,
+                onChanged: (checked) {
+                  container.hasPallets = checked ?? false;
                   onUpdate();
                   if (!context.mounted) return;
                   Navigator.pop(context);

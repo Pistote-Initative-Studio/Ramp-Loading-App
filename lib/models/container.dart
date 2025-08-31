@@ -18,6 +18,7 @@ class StorageContainer extends HiveObject {
   final SizeEnum size;
   int weightKg;
   bool dangerousGoods;
+  bool hasPallets;
   final int? colorIndex;
 
   StorageContainer({
@@ -28,6 +29,7 @@ class StorageContainer extends HiveObject {
     required this.size,
     this.weightKg = 0,
     this.dangerousGoods = false,
+    this.hasPallets = false,
     this.colorIndex,
   }) : label = label ?? uld ?? '';
 
@@ -53,14 +55,15 @@ class StorageContainerAdapter extends TypeAdapter<StorageContainer> {
       size: fields[3] as SizeEnum,
       weightKg: fields[4] as int,
       dangerousGoods: fields[5] as bool,
-      colorIndex: fields[6] as int?,
+      hasPallets: fields[6] as bool? ?? false,
+      colorIndex: fields[7] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, StorageContainer obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -74,6 +77,8 @@ class StorageContainerAdapter extends TypeAdapter<StorageContainer> {
       ..writeByte(5)
       ..write(obj.dangerousGoods)
       ..writeByte(6)
+      ..write(obj.hasPallets)
+      ..writeByte(7)
       ..write(obj.colorIndex);
   }
 }

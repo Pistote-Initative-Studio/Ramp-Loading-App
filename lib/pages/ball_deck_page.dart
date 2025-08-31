@@ -273,6 +273,7 @@ class _AddUldDialogState extends ConsumerState<AddUldDialog> {
                     size: SizeEnum.PAG_88x125,
                     weightKg: 0,
                     dangerousGoods: false,
+                    hasPallets: false,
                     colorIndex: 0,
                   ),
                 );
