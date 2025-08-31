@@ -998,7 +998,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
                 : Stack(
                     children: [
                       Positioned(
-                        top: 2,
+                        bottom: 2,
                         left: 2,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -1155,7 +1155,7 @@ class _PlanePageState extends ConsumerState<PlanePage> {
                   : Stack(
                       children: [
                         Positioned(
-                          top: 2,
+                          bottom: 2,
                           left: 2,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
