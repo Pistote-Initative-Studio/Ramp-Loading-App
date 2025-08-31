@@ -50,9 +50,20 @@ class _UldChipState extends State<UldChip> {
     } catch (_) {}
   }
 
+  void _togglePallets(bool? value) {
+    if (value == null) return;
+    setState(() {
+      widget.uld.hasPallets = value;
+    });
+    try {
+      widget.uld.save();
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasDg = widget.uld.dangerousGoods;
+    final hasPallets = widget.uld.hasPallets;
 
     final inner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -64,29 +75,35 @@ class _UldChipState extends State<UldChip> {
       ),
     );
 
-    Widget decorated = DottedBorder(
-      color: Colors.white,
-      strokeWidth: 2,
-      dashPattern: const [4, 4],
-      borderType: BorderType.RRect,
-      radius: const Radius.circular(8),
-      child: inner,
-    );
-
+    Widget decorated = inner;
+    if (hasPallets) {
+      decorated = DottedBorder(
+        color: Colors.blue,
+        strokeWidth: 2,
+        dashPattern: const [4, 4],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(8),
+        child: decorated,
+      );
+    }
     if (hasDg) {
-      decorated = Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: DottedBorder(
-          color: Colors.white,
-          strokeWidth: 2,
-          dashPattern: const [4, 4],
-          borderType: BorderType.RRect,
-          radius: const Radius.circular(8),
-          child: inner,
-        ),
+      decorated = DottedBorder(
+        color: Colors.red,
+        strokeWidth: 2,
+        dashPattern: const [4, 4],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(8),
+        child: decorated,
+      );
+    }
+    if (!hasDg && !hasPallets) {
+      decorated = DottedBorder(
+        color: Colors.white,
+        strokeWidth: 2,
+        dashPattern: const [4, 4],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(8),
+        child: decorated,
       );
     }
 
@@ -102,6 +119,19 @@ class _UldChipState extends State<UldChip> {
               value: hasDg,
               onChanged: _toggleDg,
               activeColor: Colors.red,
+              checkColor: Colors.white,
+            ),
+          ),
+        ),
+        Positioned(
+          top: -4,
+          left: -4,
+          child: Transform.scale(
+            scale: 0.8,
+            child: Checkbox(
+              value: hasPallets,
+              onChanged: _togglePallets,
+              activeColor: Colors.blue,
               checkColor: Colors.white,
             ),
           ),
