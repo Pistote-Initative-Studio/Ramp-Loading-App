@@ -94,6 +94,7 @@ class _UldChipState extends State<UldChip> {
     final hasPallets = widget.uld.hasPallets;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
@@ -115,7 +116,7 @@ class _UldChipState extends State<UldChip> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           widget.uld.uld,
           style: const TextStyle(fontSize: 12, color: Colors.white),
@@ -126,7 +127,7 @@ class _UldChipState extends State<UldChip> {
 
     final inner = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      alignment: Alignment.center,
+      alignment: Alignment.topCenter,
       child: content,
     );
 
