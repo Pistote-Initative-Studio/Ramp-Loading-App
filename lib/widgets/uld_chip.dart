@@ -60,6 +60,31 @@ class _UldChipState extends State<UldChip> {
     } catch (_) {}
   }
 
+  Widget _buildIndicator({
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+    required Color activeColor,
+    required String label,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Transform.scale(
+          scale: 0.8,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: activeColor,
+            checkColor: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasDg = widget.uld.dangerousGoods;
@@ -128,39 +153,21 @@ class _UldChipState extends State<UldChip> {
         Positioned(
           top: -4,
           left: -4,
-          child: Column(
-            children: [
-              Transform.scale(
-                scale: 0.8,
-                child: Checkbox(
-                  value: hasPallets,
-                  onChanged: _togglePallets,
-                  activeColor: Colors.blue,
-                  checkColor: Colors.white,
-                ),
-              ),
-              const Text('P',
-                  style: TextStyle(color: Colors.white, fontSize: 10)),
-            ],
+          child: _buildIndicator(
+            value: hasPallets,
+            onChanged: _togglePallets,
+            activeColor: Colors.blue,
+            label: 'P',
           ),
         ),
         Positioned(
           top: -4,
           right: -4,
-          child: Column(
-            children: [
-              Transform.scale(
-                scale: 0.8,
-                child: Checkbox(
-                  value: hasDg,
-                  onChanged: _toggleDg,
-                  activeColor: Colors.red,
-                  checkColor: Colors.white,
-                ),
-              ),
-              const Text('DG',
-                  style: TextStyle(color: Colors.white, fontSize: 10)),
-            ],
+          child: _buildIndicator(
+            value: hasDg,
+            onChanged: _toggleDg,
+            activeColor: Colors.red,
+            label: 'DG',
           ),
         ),
       ],
