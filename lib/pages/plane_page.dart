@@ -436,11 +436,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
     const offset = 8.0;
 
     if (type == 'B763') {
-      final rect14 = _rectForSlot('14');
+      final rect12 = _rectForSlot('12');
       final rect42 = _rectForSlot('42');
       final rect24 = _rectForSlot('24');
       final rect31 = _rectForSlot('31');
-      if (rect14 == null || rect42 == null || rect24 == null || rect31 == null) {
+      if (rect12 == null || rect42 == null || rect24 == null || rect31 == null) {
         if (_lowerDeckMarker14 != null ||
             _lowerDeckMarkerDoor != null ||
             _lowerDeckSplitRect != null) {
@@ -452,11 +452,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         }
         return;
       }
-      final marker14 = Rect.fromLTWH(
-        rect14.right + offset,
-        rect14.top,
+      final marker12 = Rect.fromLTWH(
+        rect12.right + offset,
+        rect12.top,
         thickness,
-        rect14.height,
+        rect12.height,
       );
       final markerDoor = Rect.fromLTWH(
         rect42.right + offset,
@@ -471,11 +471,11 @@ class _PlanePageState extends ConsumerState<PlanePage> {
         rect24.width,
         thickness,
       );
-      if (_lowerDeckMarker14 != marker14 ||
+      if (_lowerDeckMarker14 != marker12 ||
           _lowerDeckMarkerDoor != markerDoor ||
           _lowerDeckSplitRect != splitRect) {
         setState(() {
-          _lowerDeckMarker14 = marker14;
+          _lowerDeckMarker14 = marker12;
           _lowerDeckMarkerDoor = markerDoor;
           _lowerDeckSplitRect = splitRect;
         });
