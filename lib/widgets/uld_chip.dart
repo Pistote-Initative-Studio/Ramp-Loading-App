@@ -63,28 +63,19 @@ class _UldChipState extends State<UldChip> {
     } catch (_) {}
   }
 
-  Widget _buildIndicator({
+  Widget _buildCheckbox({
     required bool value,
     required ValueChanged<bool?> onChanged,
     required Color activeColor,
-    required String label,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Transform.scale(
-          scale: 0.8,
-          child: Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: activeColor,
-            checkColor: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
-      ],
+    return Transform.scale(
+      scale: 0.8,
+      child: Checkbox(
+        value: value,
+        onChanged: onChanged,
+        activeColor: activeColor,
+        checkColor: Colors.white,
+      ),
     );
   }
 
@@ -94,41 +85,44 @@ class _UldChipState extends State<UldChip> {
     final hasPallets = widget.uld.hasPallets;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildIndicator(
+            _buildCheckbox(
               value: hasPallets,
               onChanged: _togglePallets,
               activeColor: Colors.blue,
-              label: 'P',
             ),
-            const SizedBox(width: 8),
-            _buildIndicator(
+            const SizedBox(width: 4),
+            _buildCheckbox(
               value: hasDg,
               onChanged: _toggleDg,
               activeColor: Colors.red,
-              label: 'DG',
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          widget.uld.uld,
-          style: const TextStyle(fontSize: 12, color: Colors.white),
-          textAlign: TextAlign.center,
+        const SizedBox(height: 4),
+        Flexible(
+          child: Text(
+            widget.uld.uld,
+            style: const TextStyle(fontSize: 12, color: Colors.white),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
 
-    final inner = Container(
+    final inner = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      alignment: Alignment.topCenter,
-      child: content,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: content,
+      ),
     );
 
     Widget decorated;
